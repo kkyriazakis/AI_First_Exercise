@@ -1,11 +1,11 @@
 /**
- INTELLIGENCE LAB
- course		: 	COMP 417 - Artificial Intelligence
- authors		:	A. Vogiatzis, N. Trigkas
- excercise	:	1st Programming
- term 		: 	Spring 2019-2020
- date 		:   March 2020
- */
+			INTELLIGENCE LAB
+	course		: 	COMP 417 - Artificial Intelligence
+	authors		:	A. Vogiatzis, N. Trigkas
+	excercise	:	1st Programming
+	term 		: 	Spring 2019-2020
+	date 		:   March 2020
+*/
 import java.awt.Canvas;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -56,8 +56,10 @@ public class Drawing extends Canvas{
 					Rectangle r = new Rectangle(0,0,s,s);
 					g2.setPaint(new TexturePaint(img, r));
 					Rectangle rect = new Rectangle(i*s,j*s,s,s);
-					g2.fill(rect);
-				}catch(IOException e){System.out.println("Error");}
+    				g2.fill(rect);
+				}catch(IOException e){
+					System.out.println(e);
+					System.out.println("Error_LAND");}
 
 				g2.setColor(Color.BLACK);
 				g2.drawLine(i*s, j*s,(i+1)*s, j*s);
@@ -78,7 +80,7 @@ public class Drawing extends Canvas{
 				g2.setPaint(new TexturePaint(img, r));
 				Rectangle rect = new Rectangle(i*s,j*s,s,s);
 				g2.fill(rect);
-			}catch(IOException e){System.out.println("Error");}
+			}catch(IOException e){System.out.println("Error_WALL");}
 
 			g2.setColor(Color.BLACK);
 			g2.drawLine(i*s, j*s,(i+1)*s, j*s);
@@ -93,12 +95,12 @@ public class Drawing extends Canvas{
 			int j = grass[k]/M;
 
 			try{
-				img = ImageIO.read(new File("img/grass.png"));
+				img = ImageIO.read(new File("img/grass.png")); 
 				Rectangle r = new Rectangle(0,0,s,s);
 				g2.setPaint(new TexturePaint(img, r));
 				Rectangle rect = new Rectangle(i*s,j*s,s,s);
 				g2.fill(rect);
-			}catch(IOException e){System.out.println("Error");}
+			}catch(IOException e){System.out.println("Error_GRASS");}
 
 			g2.setColor(Color.BLACK);
 			g2.drawLine(i*s, j*s,(i+1)*s, j*s);
@@ -114,12 +116,12 @@ public class Drawing extends Canvas{
 				int j = step_sequence[k]/M;
 
 				try{
-					img = ImageIO.read(new File("img/walk.jpg"));
+					img = ImageIO.read(new File("img/walk.jpg")); 
 					Rectangle r = new Rectangle(0,0,s,s);
 					g2.setPaint(new TexturePaint(img, r));
 					Rectangle rect = new Rectangle(i*s,j*s,s,s);
 					g2.fill(rect);
-				}catch(IOException e){System.out.println("Error");}
+				}catch(IOException e){System.out.println("Error_WALK");}
 
 				g2.setColor(Color.BLACK);
 				g2.drawLine(i*s, j*s,(i+1)*s, j*s);
@@ -131,12 +133,12 @@ public class Drawing extends Canvas{
 		int i=terminal_idx%M;
 		int j=terminal_idx/M;
 		try{
-			img = ImageIO.read(new File("img/terminal3.png"));
+			img = ImageIO.read(new File("img/terminal3.png")); 
 			Rectangle r = new Rectangle(0,0,s,s);
 			g2.setPaint(new TexturePaint(img, r));
 			Rectangle rect = new Rectangle(i*s,j*s,s,s);
 			g2.fill(rect);
-		}catch(IOException e){System.out.println("Error");}
+		}catch(IOException e){System.out.println("Error_TERMINAL");}
 		g2.setColor(Color.BLACK);
 		g2.drawLine(i*s, j*s,(i+1)*s, j*s);
 		g2.drawLine(i*s, j*s,i*s, (j+1)*s);
@@ -144,15 +146,15 @@ public class Drawing extends Canvas{
 		i=start_idx%M;
 		j=start_idx/M;
 		try{
-			img = ImageIO.read(new File("img/start.png"));
+			img = ImageIO.read(new File("img/start.png")); 
 			Rectangle r = new Rectangle(0,0,s,s);
 			g2.setPaint(new TexturePaint(img, r));
 			Rectangle rect = new Rectangle(i*s,j*s,s,s);
 			g2.fill(rect);
-		}catch(IOException e){System.out.println("Error");}
+		}catch(IOException e){System.out.println("Error_START");}
 
 		g2.setColor(Color.BLACK);
 		g2.drawLine(i*s, j*s,(i+1)*s, j*s);
 		g2.drawLine(i*s, j*s,i*s, (j+1)*s);
-	}
+	}	
 }

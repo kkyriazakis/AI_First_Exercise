@@ -6,7 +6,11 @@
 	term 		: 	Spring 2019-2020
 	date 		:   March 2020
 */
+import java.util.Random;
 import javax.swing.*;
+import java.awt.Graphics;
+import java.awt.Color;
+import java.util.ArrayList;
 import java.awt.Canvas;
 
 class GridGenerator{
@@ -32,24 +36,19 @@ class GridGenerator{
 	public static void main(String[] args) {
 		String frame = "Random World";
 		Grid mygrid;
-		if (args.length<1)
-			mygrid = new Grid();
-		else if (args[0].equals("-i")){
-			mygrid = new Grid(args[1]);
-			frame = args[1].split("/")[1];
-		}else if (args[0].equals("-d")){
-			mygrid = new Grid(Integer.parseInt(args[1]),Integer.parseInt(args[2]));
-		}else{
-			mygrid = new Grid("world_examples/default.world");
-			frame = "default.world";
-		}
+		Search search;
+
+			mygrid = new Grid("world_examples/easy.world");
+			frame = "easy.world";
+
+
 		int N = mygrid.getNumOfRows();
 		int M = mygrid.getNumOfColumns();
-		// -----------------------------------------------------------------
-
-		Search S = new Search(mygrid);
-
-		int[] result = S.BreadthFirstSearch();
-		VisualizeGrid(frame,N,M,mygrid.getWalls(),mygrid.getGrass(),result,mygrid.getStartidx(),mygrid.getTerminalidx());
+		search=new Search(mygrid);
+		//VisualizeGrid(frame,N,M,mygrid.getWalls(),mygrid.getGrass(),mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid("DFS",N,M,mygrid.getWalls(),mygrid.getGrass(),search.dfs(),mygrid.getStartidx(),mygrid.getTerminalidx());
+		//VisualizeGrid("BFS",N,M,mygrid.getWalls(),mygrid.getGrass(),search.bfs(),mygrid.getStartidx(),mygrid.getTerminalidx());
+		//search.dfs();
 	}
+		
 }

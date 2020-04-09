@@ -1,5 +1,5 @@
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.lang.Math.*;
 
 public class Search {
 
@@ -27,6 +27,21 @@ public class Search {
         return false;
     }
 
+    public void sortByCost(LinkedList<Node> list){
+        Collections.sort(list, new Comparator<Node>() {
+            @Override
+            public int compare(Node o1, Node o2) {
+                return o1.getf() - o2.getf();
+            }
+        });
+    }
+
+    public double heuristic(Node n){
+        int[] x = coord(n.getId());
+        int[] y = coord(myGrid.getTerminalidx());
+
+        return Math.sqrt( (x[0]-y[0])*(x[0]-y[0]) + (x[1]-y[1])*(x[1]-y[1]) );
+    }
 
     public int[] dfs(){
         int i = myGrid.getStart()[0];

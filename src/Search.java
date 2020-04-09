@@ -227,6 +227,12 @@ public class Search {
         else{
             toReturn = new int[]{};
         }
+        int temp = 0;
+        for(int c = 0; c < toReturn.length-1; c++){
+            temp = temp + myGrid.getCell(coord(toReturn[c])[0], coord(toReturn[c])[1]).getCost();
+        }
+        System.out.println("The cost of BFS is: " + temp);
+
         return toReturn;
     }
 

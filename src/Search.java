@@ -9,29 +9,49 @@ public class Search {
         this.myGrid = myGrid;
     }
 
-    public int[] dfs(){
+    public int coord(int i, int j){return (i*myGrid.getNumOfColumns())+j;}
 
+    public int[] coord(int a){
+        int[] toReturn = new int[2];
+        toReturn[0] = a / myGrid.getNumOfColumns();
+        toReturn[1] = a % myGrid.getNumOfColumns();
+        return toReturn; //Returns [i,j]
+    }
+
+    public boolean searchList(LinkedList<Node> list, int id){
+        for (int i=0; i<list.size(); i++){
+            if(list.get(i).getId()==id){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public int[] dfs(){
         int i = myGrid.getStart()[0];
-        int j= myGrid.getStart()[1];
+        int j = myGrid.getStart()[1];
 
         Boolean found = false;
         //Node node = new Node(myGrid.getStartidx(),null);
         List<Integer> path = new ArrayList<>();
-        Node tmp = new Node(-1,null);
+        Node tmp   = new Node(-1,null);
         Node state = new Node(myGrid.getStartidx(),tmp);
         Cell s = myGrid.getCell(i,j);
+
         if (s.isTerminal()){
             System.out.println("First Cell Goal");
         }
+        LinkedList<Node> stack = new LinkedList<Node>();
+
         //Node n = new Node(start,null);
         //n.setNeighbours(findNeighbours(start));
-        LinkedList<Node> stack = new LinkedList<Node>();
         //Stack<Integer> stack = new Stack<>();
         int start = coord(i,j);
         stack.add(state);
         LinkedList<Integer> checked = new LinkedList<Integer>();
-        while(!stack.isEmpty()){
 
+        while(!stack.isEmpty()){
             tmp = stack.pop();
             state = new Node(tmp.getId(),tmp.getParent());
 
@@ -48,17 +68,15 @@ public class Search {
             System.out.println("I am expanding: " + state.getId() + " -> (" + coord(state.getId())[0] + " , "+ coord(state.getId())[1]+ " )" );
             System.out.println("this /n");
             for(int var=0; var<neighbors.length; var++) {
-                Node neighbor = new Node(neighbors[var],state);
+                Node neighbor = new Node(neighbors[var], state);
                 System.out.println("Adding neighbor: " + neighbor.getId() + " -> (" + coord(neighbor.getId())[0] + " , "+ coord(neighbor.getId())[1] +")" );
-                if(!((checked.contains(neighbor.getId()))||(searchList(stack,neighbor.getId())))){
+                if( !((checked.contains(neighbor.getId())) || (searchList(stack,neighbor.getId()))) ){
                     System.out.println("Added" );
                     stack.push(neighbor);
                 }else{
                     System.out.println("Not added");
                 }
-
             }
-
         }
         int[] toReturn;
         if(found){    //IF FOUND
@@ -75,28 +93,17 @@ public class Search {
         return toReturn;
     }
 
-    public boolean searchList(LinkedList<Node> list, int id){
-        for (int i=0; i<list.size();i++){
-            if(list.get(i).getId()==id){
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-
     public int[] bfs(){
         LinkedList<Node> explored = new LinkedList<Node>(); //FIFO
-        LinkedList<Node> fringe = new LinkedList<Node>();   //FIFO
-        List<Integer> path = new ArrayList<>();
+        LinkedList<Node> fringe   = new LinkedList<Node>(); //FIFO
+        List<Integer> path        = new ArrayList<>();
 
         boolean found = false;
-        Node tmp = new Node(-1,null);
+        Node tmp   = new Node(-1,null);
         Node state = new Node(myGrid.getStartidx(),tmp);
         fringe.add(state);
 
-        while(!fringe.isEmpty()){
+        while( !fringe.isEmpty() ){
             tmp = fringe.pop();
             state = new Node(tmp.getId(),tmp.getParent());
 
@@ -107,11 +114,10 @@ public class Search {
             explored.add(state);
 
             int[] children = getNeighbors(state.getId());
-
             for(int i=0; i<children.length; i++){   //EXPLORE CHILDREN
                 Node child = new Node(children[i],state);
-                if( !explored.contains(child) && !(searchList(fringe,child.getId()))){
-                    fringe.add(child);  //APPEND CURR CHILD
+                if( !explored.contains(child) && !(searchList(fringe,child.getId())) ){
+                    fringe.add(child);  //APPEND CURRENT CHILD
                 }
             }
         }
@@ -132,22 +138,9 @@ public class Search {
     }
 
 
-    public int coord(int i, int j){
-        return (i*myGrid.getNumOfColumns())+j;
-    }
-
-
-    public int[] coord(int a){
-        int[] toReturn=new int[2];
-        toReturn[0]=a/myGrid.getNumOfColumns();
-        toReturn[1]=a%myGrid.getNumOfColumns();
-        //Returns [i,j]
-        return toReturn;
-    }
-
     public int[] getNeighbors(int state) {
         int i = coord(state)[0];  // row
-        int j = coord(state)[1];  // collumn
+        int j = coord(state)[1];  // column
         List<Integer> children = new ArrayList<>();
 
         if((i+1) >= 0 && (i+1) < myGrid.getNumOfRows()){ //Down
@@ -170,8 +163,6 @@ public class Search {
                 children.add(coord(i,j-1));
             }
         }
-
-
         return children.stream().mapToInt(x->x).toArray();
         //return children;
     }

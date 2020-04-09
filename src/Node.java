@@ -6,6 +6,8 @@ public class Node {
     public Node(int id, Node parent) {
         this.id = id;
         this.parent = parent;
+        this.g = 0;
+        this.h = 0;
     }
 
     public int getId(){ return id;}

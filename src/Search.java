@@ -106,7 +106,7 @@ public class Search {
 
         int[] toReturn;
         if(found){    //IF FOUND
-            System.out.println("A* Search cost = " + state.getg());
+            System.out.println("The cost of DFS is: " + state.getg());
             path.add(state.getId());
             while (state.getParent() != null){
                 path.add(state.getParent().getId());
@@ -183,6 +183,12 @@ public class Search {
         else{
             toReturn = new int[]{};
         }
+        int temp = 0;
+        for(int c = 0; c < toReturn.length-1; c++){
+            temp = temp + myGrid.getCell(coord(toReturn[c])[0], coord(toReturn[c])[1]).getCost();
+        }
+        System.out.println("The cost of DFS is: " + temp);
+
         return toReturn;
     }
 

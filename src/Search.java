@@ -1,5 +1,4 @@
 import java.util.*;
-import java.lang.Math.*;
 
 public class Search {
 
@@ -31,7 +30,8 @@ public class Search {
         Collections.sort(list, new Comparator<Node>() {
             @Override
             public int compare(Node o1, Node o2) {
-                return o1.getf() - o2.getf();
+                double i = o1.getf()*100 - o2.getf()*100;
+                return (int)i;
             }
         });
     }
@@ -42,6 +42,85 @@ public class Search {
 
         return Math.sqrt( (x[0]-y[0])*(x[0]-y[0]) + (x[1]-y[1])*(x[1]-y[1]) );
     }
+
+    public boolean searchAndCompare(LinkedList<Node> list, Node target){
+        //O neos pateras kai apostasi briskete sto target
+        Node old;
+
+        for (int i=0; i<list.size(); i++){
+            old=list.get(i);
+            if(old.getId()==target.getId()){
+                int oldCost=myGrid.getCell(coord(old.getParent().getId())[0],coord(old.getParent().getId())[1]).getCost();
+                int newCost=myGrid.getCell(coord(target.getParent().getId())[0],coord(target.getParent().getId())[1]).getCost();
+                if(oldCost > newCost){
+                    list.remove(old);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public int[] a_star(){
+        List<Integer> path           = new ArrayList<>();
+        LinkedList<Integer> explored = new LinkedList<Integer>();
+        LinkedList<Node> fringe      = new LinkedList<Node>();  //FIFO
+
+        boolean found = false;
+        Node tmp   = new Node(-1,null);
+        Node state = new Node(myGrid.getStartidx(),tmp);
+        fringe.add(state);
+
+        while( !fringe.isEmpty() ){
+            tmp = fringe.pop();
+            state = new Node(tmp.getId(),tmp.getParent());
+
+            if (state.getId() == myGrid.getTerminalidx()){  //FOUND GOAL
+                found = true;
+                break;
+            }
+            explored.add(state.getId());
+            int[] children = getNeighbors(state.getId());
+
+            for(int i=0; i<children.length; i++){   //EXPLORE CHILDREN
+                Node child = new Node(children[i],state);
+
+                if( !explored.contains(child.getId()) ){
+                    if( !searchList(fringe,child.getId()) ){ //CHILD NOT IN FRINGE
+                        double curr_cost = myGrid.getCell(coord(child.getId())[0], coord(child.getId())[1]).getCost();
+                        child.setg( child.getParent().getg() + curr_cost ); //SET CURRENT G COST
+                        child.seth( heuristic(child) ); //SET CURRENT H COST
+                        fringe.add( child );    //ADD CHILD
+                    }
+                    else{   //CHILD IN FRINGE
+                        if( !searchAndCompare(fringe, child) ){
+                            double curr_cost = myGrid.getCell(coord(child.getId())[0], coord(child.getId())[1]).getCost();
+                            child.setg( child.getParent().getg() + curr_cost ); //SET CURRENT G COST
+                            child.seth( heuristic(child) ); //SET CURRENT H COST
+                            fringe.add( child );    //ADD CHILD
+                        }
+                    }
+                }
+            }
+            sortByCost(fringe);
+        }
+
+        int[] toReturn;
+        if(found){    //IF FOUND
+            System.out.println("A* Search cost = " + state.getParent().getg());
+            path.add(state.getId());
+            while (state.getParent() != null){
+                path.add(state.getParent().getId());
+                state = state.getParent();
+            }
+            toReturn = path.stream().mapToInt(x -> x).toArray();
+        }
+        else{
+            toReturn = new int[]{};
+        }
+        return toReturn;
+    }
+
 
     public int[] dfs(){
         int i = myGrid.getStart()[0];
@@ -109,9 +188,9 @@ public class Search {
     }
 
     public int[] bfs(){
-        LinkedList<Node> explored = new LinkedList<Node>(); //FIFO
-        LinkedList<Node> fringe   = new LinkedList<Node>(); //FIFO
-        List<Integer> path        = new ArrayList<>();
+        List<Integer> path           = new ArrayList<Integer>();
+        LinkedList<Integer> explored = new LinkedList<Integer>();
+        LinkedList<Node> fringe      = new LinkedList<Node>();    //FIFO
 
         boolean found = false;
         Node tmp   = new Node(-1,null);
@@ -126,12 +205,12 @@ public class Search {
                 found = true;
                 break;
             }
-            explored.add(state);
+            explored.add(state.getId());
 
             int[] children = getNeighbors(state.getId());
             for(int i=0; i<children.length; i++){   //EXPLORE CHILDREN
                 Node child = new Node(children[i],state);
-                if( !explored.contains(child) && !(searchList(fringe,child.getId())) ){
+                if( !explored.contains(child.getId()) && !(searchList(fringe,child.getId())) ){
                     fringe.add(child);  //APPEND CURRENT CHILD
                 }
             }

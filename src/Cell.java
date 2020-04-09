@@ -31,7 +31,7 @@ class Cell {
 	}
 
 	public boolean isWall(){return  (this.cell_type=='W');}
-	public boolean isGrass(){return  (this.cell_type=='G');}
+	public boolean isGrass(){return (this.cell_type=='G');}
 	public boolean isLand(){return (this.cell_type=='L');}
 
 	public boolean isStart(){return this.starting_point;}

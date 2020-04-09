@@ -38,17 +38,17 @@ class GridGenerator{
 		Grid mygrid;
 		Search search;
 
-			mygrid = new Grid("world_examples/easy.world");
-			frame = "easy.world";
-
+		mygrid = new Grid("world_examples/hard_a.world");
 
 		int N = mygrid.getNumOfRows();
 		int M = mygrid.getNumOfColumns();
-		search=new Search(mygrid);
-		//VisualizeGrid(frame,N,M,mygrid.getWalls(),mygrid.getGrass(),mygrid.getStartidx(),mygrid.getTerminalidx());
-		VisualizeGrid("DFS",N,M,mygrid.getWalls(),mygrid.getGrass(),search.dfs(),mygrid.getStartidx(),mygrid.getTerminalidx());
-		//VisualizeGrid("BFS",N,M,mygrid.getWalls(),mygrid.getGrass(),search.bfs(),mygrid.getStartidx(),mygrid.getTerminalidx());
-		//search.dfs();
+
+		search = new Search(mygrid);
+
+		//VisualizeGrid("World",N,M,mygrid.getWalls(),mygrid.getGrass(),new int[]{},mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid("BFS"  ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.bfs(),       mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid("DFS"  ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.dfs(),       mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid("A*"   ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.a_star(),    mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid("LRTA*",N,M,mygrid.getWalls(),mygrid.getGrass(), search.rlta_star(), mygrid.getStartidx(),mygrid.getTerminalidx());
 	}
-		
 }

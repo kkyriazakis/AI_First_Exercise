@@ -61,6 +61,58 @@ public class Search {
         return true;
     }
 
+    public int[] rlta_star(){
+        List<Integer> path           = new ArrayList<>();
+        LinkedList<Integer> explored = new LinkedList<Integer>();
+        LinkedList<Node> fringe      = new LinkedList<Node>();  //FIFO
+
+        boolean found = false;
+        Node tmp   = new Node(-1,null);
+        Node state = new Node(myGrid.getStartidx(),tmp);
+        fringe.add(state);
+
+        while( !fringe.isEmpty() ){
+            state = fringe.pop();
+            double curr_cost = myGrid.getCell(coord(state.getId())[0], coord(state.getId())[1]).getCost();
+            state.setg( state.getParent().getg() + curr_cost ); //SET CURRENT G COST
+
+            if (state.getId() == myGrid.getTerminalidx()){  //FOUND GOAL
+                found = true;
+                break;
+            }
+            explored.add(state.getId());
+            int[] children = getNeighbors(state.getId());
+
+            for(int i=0; i<children.length; i++){   //EXPLORE CHILDREN
+                Node child = new Node(children[i],state);
+
+                if( !explored.contains(child.getId()) ){
+                    if( !searchList(fringe,child.getId()) || !searchAndCompare(fringe, child)){ //CHILD NOT IN FRINGE
+                        child.seth( heuristic(child) ); //SET CURRENT H COST
+                        fringe.add( child );    //ADD CHILD
+                    }
+                }
+            }
+            sortByCost(fringe);
+        }
+
+        int[] toReturn;
+        if(found){    //IF FOUND
+            System.out.println("The cost of RLTA* is: " + state.getg());
+            path.add(state.getId());
+            while (state.getParent() != null){
+                path.add(state.getParent().getId());
+                state = state.getParent();
+            }
+            toReturn = path.stream().mapToInt(x -> x).toArray();
+        }
+        else{
+            toReturn = new int[]{};
+        }
+        return toReturn;
+    }
+
+
     public int[] a_star(){
         List<Integer> path           = new ArrayList<>();
         LinkedList<Integer> explored = new LinkedList<Integer>();
@@ -85,19 +137,11 @@ public class Search {
                 Node child = new Node(children[i],state);
 
                 if( !explored.contains(child.getId()) ){
-                    if( !searchList(fringe,child.getId()) ){ //CHILD NOT IN FRINGE
+                    if( !searchList(fringe,child.getId()) || !searchAndCompare(fringe, child)){ //CHILD NOT IN FRINGE
                         double curr_cost = myGrid.getCell(coord(child.getId())[0], coord(child.getId())[1]).getCost();
                         child.setg( child.getParent().getg() + curr_cost ); //SET CURRENT G COST
                         child.seth( heuristic(child) ); //SET CURRENT H COST
                         fringe.add( child );    //ADD CHILD
-                    }
-                    else{   //CHILD IN FRINGE
-                        if( !searchAndCompare(fringe, child) ){
-                            double curr_cost = myGrid.getCell(coord(child.getId())[0], coord(child.getId())[1]).getCost();
-                            child.setg( child.getParent().getg() + curr_cost ); //SET CURRENT G COST
-                            child.seth( heuristic(child) ); //SET CURRENT H COST
-                            fringe.add( child );    //ADD CHILD
-                        }
                     }
                 }
             }
@@ -106,7 +150,7 @@ public class Search {
 
         int[] toReturn;
         if(found){    //IF FOUND
-            System.out.println("The cost of DFS is: " + state.getg());
+            System.out.println("The cost of A* is: " + state.getg());
             path.add(state.getId());
             while (state.getParent() != null){
                 path.add(state.getParent().getId());
@@ -149,8 +193,8 @@ public class Search {
             state = new Node(tmp.getId(),tmp.getParent());
 
             if (state.getId() == myGrid.getTerminalidx()){  //FOUND GOAL
-                System.out.println("Finish found");
-                System.out.println("At: " + state.getId() + " -> (" + coord(state.getId())[0] + " , "+ coord(state.getId())[1] +")" );
+                //System.out.println("Finish found");
+                //System.out.println("At: " + state.getId() + " -> (" + coord(state.getId())[0] + " , "+ coord(state.getId())[1] +")" );
                 found = true;
                 break;
             }
@@ -158,16 +202,16 @@ public class Search {
 
             int[] neighbors = getNeighbors(state.getId());
             //setNodes(newSquare,neighbors);
-            System.out.println("I am expanding: " + state.getId() + " -> (" + coord(state.getId())[0] + " , "+ coord(state.getId())[1]+ " )" );
-            System.out.println("this /n");
+            //System.out.println("I am expanding: " + state.getId() + " -> (" + coord(state.getId())[0] + " , "+ coord(state.getId())[1]+ " )" );
+            //System.out.println("this /n");
             for(int var=0; var<neighbors.length; var++) {
                 Node neighbor = new Node(neighbors[var], state);
-                System.out.println("Adding neighbor: " + neighbor.getId() + " -> (" + coord(neighbor.getId())[0] + " , "+ coord(neighbor.getId())[1] +")" );
+                //System.out.println("Adding neighbor: " + neighbor.getId() + " -> (" + coord(neighbor.getId())[0] + " , "+ coord(neighbor.getId())[1] +")" );
                 if( !((checked.contains(neighbor.getId())) || (searchList(stack,neighbor.getId()))) ){
-                    System.out.println("Added" );
+                    //System.out.println("Added" );
                     stack.push(neighbor);
                 }else{
-                    System.out.println("Not added");
+                    //System.out.println("Not added");
                 }
             }
         }
@@ -186,6 +230,7 @@ public class Search {
         int temp = 0;
         for(int c = 0; c < toReturn.length-1; c++){
             temp = temp + myGrid.getCell(coord(toReturn[c])[0], coord(toReturn[c])[1]).getCost();
+            //System.out.println(myGrid.getCell(coord(toReturn[c])[0], coord(toReturn[c])[1]).getCost());
         }
         System.out.println("The cost of DFS is: " + temp);
 
@@ -271,8 +316,4 @@ public class Search {
         return children.stream().mapToInt(x->x).toArray();
         //return children;
     }
-
-
-
-
 }

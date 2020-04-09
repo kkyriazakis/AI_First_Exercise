@@ -72,8 +72,7 @@ public class Search {
         fringe.add(state);
 
         while( !fringe.isEmpty() ){
-            tmp = fringe.pop();
-            state = new Node(tmp.getId(),tmp.getParent());
+            state = fringe.pop();
 
             if (state.getId() == myGrid.getTerminalidx()){  //FOUND GOAL
                 found = true;
@@ -107,7 +106,7 @@ public class Search {
 
         int[] toReturn;
         if(found){    //IF FOUND
-            System.out.println("A* Search cost = " + state.getParent().getg());
+            System.out.println("A* Search cost = " + state.getg());
             path.add(state.getId());
             while (state.getParent() != null){
                 path.add(state.getParent().getId());

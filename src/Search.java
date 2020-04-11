@@ -121,6 +121,7 @@ public class Search {
         Node tmp   = new Node(-1,null);
         Node state = new Node(myGrid.getStartidx(),tmp);
         fringe.add(state);
+        state.setg( state.getParent().getg() + myGrid.getCell(coord(state.getId())[0], coord(state.getId())[1]).getCost() );
 
         while( !fringe.isEmpty() ){
             state = fringe.pop();

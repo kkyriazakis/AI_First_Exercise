@@ -1,3 +1,7 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class Main {
 
     private static int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
@@ -7,8 +11,13 @@ public class Main {
 
         Chromosome t = generateChromosome();
 
-        boolean x = checkFeasibility( randomizeChromosome(t) );
-        System.out.print( x );
+        //t = randomizeChromosome(t);
+
+        boolean x = checkFeasibility( t );
+        System.out.println( "Feasible = "+ x );
+        t.updateScore();
+        System.out.println( "score = "+ t.getScore() );
+
     }
 
     public static int[] getColumn(int[][] x, int col){
@@ -26,7 +35,12 @@ public class Main {
         for(int i=0; i<14; i++){
             col = getColumn(pop, i);    //EXTRACT COLUMN NUM i 
 
-            //TODO RANDOMIZE col
+            List<Integer> tmp = new ArrayList<>();
+            for (int w=0; w<30; w++){
+                tmp.add(col[w]);
+            }
+            Collections.shuffle(tmp);
+            col = tmp.stream().mapToInt(x->x).toArray();
 
             for(int j=0; j<col.length; j++){    //SET RANDOMIZED COLUMN BACK TO POPULATION
                 pop[j][i] = col[j];

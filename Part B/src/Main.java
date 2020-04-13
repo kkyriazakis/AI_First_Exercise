@@ -5,11 +5,39 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Chromosome t = GenerateChromosome();
-        boolean x = checkFeasibility(t);
+        Chromosome t = generateChromosome();
 
-        System.out.println("---- " + x + " Dat");
+        boolean x = checkFeasibility( randomizeChromosome(t) );
+        System.out.print( x );
     }
+
+    public static int[] getColumn(int[][] x, int col){
+        int[] y = new int[x.length];
+        for(int i=0; i<x.length; i++){
+            y[i] = x[i][col];
+        }
+        return y;
+    }
+
+    public static Chromosome randomizeChromosome(Chromosome chr){
+        int [][] pop = chr.getPopulation();
+        int [] col;
+
+        for(int i=0; i<14; i++){
+            col = getColumn(pop, i);    //EXTRACT COLUMN NUM i 
+
+            //TODO RANDOMIZE col
+
+            for(int j=0; j<col.length; j++){    //SET RANDOMIZED COLUMN BACK TO POPULATION
+                pop[j][i] = col[j];
+            }
+        }
+
+        Chromosome new_chr = new Chromosome(pop, ChromosomeID);
+        ChromosomeID++;
+        return new_chr;
+    }
+
 
     public static boolean checkFeasibility(Chromosome chromosome){
         int[][] array = chromosome.getPopulation();
@@ -52,7 +80,8 @@ public class Main {
         return true;
     }
 
-    public static Chromosome GenerateChromosome(){
+
+    public static Chromosome generateChromosome(){
         int[][] pop = new int[30][14];
         int NumOfDays = hConst.length;
         int NumOfEmployees = 30;

@@ -19,7 +19,60 @@ public class Main {
         }
         List<Chromosome> newPopulation = rouletteWheelSelection(population);
 
-        twoPointVertical(newPopulation);
+        List<Chromosome> tmp;
+        tmp = twoPointVertical(newPopulation);
+        tmp = twoPointHorizontal(newPopulation);
+        flipMutate(newPopulation);
+        boundaryMutation(newPopulation);
+
+    }
+
+
+    public static void flipMutate(List<Chromosome> iPopulation) {
+        Chromosome chr;
+        int point1, point2;
+        int [][] state = new int[0][0];
+
+        for (int i=0; i<iPopulation.size(); i++ ){
+            chr = iPopulation.get(i);
+            for (int j=0; j<5; j++) {
+                point1 = new Random().nextInt(30);
+                point2 = new Random().nextInt(14);
+                state = chr.getState();
+
+                if (state[point1][point2] == 0)
+                    state[point1][point2] = 1;
+                else if (state[point1][point2] == 1)
+                    state[point1][point2] = 0;
+                else if (state[point1][point2] == 2)
+                    state[point1][point2] = 3;
+                else if (state[point1][point2] == 3)
+                    state[point1][point2] = 2;
+            }
+            chr.setState(state);
+        }
+        return;
+    }
+
+    public static void boundaryMutation(List<Chromosome> selected){
+
+        for (int i=0; i<selected.size(); i++){
+            Chromosome c = selected.get(i);
+
+            //Maybe get the upper bound of 1% online
+            for (int j=0; j<5;j++){
+                int x=new Random().nextInt(c.getState().length);
+                int y=new Random().nextInt(c.getState()[0].length);
+                boolean coin= new Random().nextBoolean();
+                int[][] tmp = c.getState();
+                if (coin){
+                    tmp[x][y]=3;
+                }else{
+                    tmp[x][y]=0;
+                }
+                c.setState(tmp);
+            }
+        }
     }
 
     public static List<Chromosome> twoPointVertical(List<Chromosome> iPopulation) {
@@ -59,7 +112,6 @@ public class Main {
             }
             c1 = generateChromosome();
             c2 = generateChromosome();
-
             c1.setState(fin1);
             c2.setState(fin2);
 
@@ -71,7 +123,7 @@ public class Main {
     }
 
 
-    public static List<Chromosome> twpPointCrossVertical(List<Chromosome> selected){
+    public static List<Chromosome> twoPointHorizontal(List<Chromosome> selected){
         List<Chromosome> newPopulation = new ArrayList<>();
 
         for (int i=1; i<selected.size(); i=i+2){
@@ -79,7 +131,6 @@ public class Main {
             int rnd2 = new Random().nextInt(selected.get(i).getState().length/2)+selected.get(i).getState().length/2;
 
             int[][] temp4 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
-
             int[][] temp40 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
 
             for(int j=0;j<selected.get(i).getState().length;j++){
@@ -101,22 +152,11 @@ public class Main {
                         temp40[j][x]=selected.get(i-1).getState()[j][x];
                     }
                 }
-                Chromosome c1 = new Chromosome(temp4,ChromosomeID);
-                ChromosomeID++;
-                Chromosome c2 = new Chromosome(temp40,ChromosomeID);
-                ChromosomeID++;
+                Chromosome c1 = new Chromosome(temp4,ChromosomeID++);
+                Chromosome c2 = new Chromosome(temp40,ChromosomeID++);
+
                 newPopulation.add(c1);
                 newPopulation.add(c2);
-                /*
-                System.out.println(Arrays.toString(selected.get(i).getState()[29]));
-                System.out.println("=============================");
-                System.out.println(Arrays.toString(selected.get(i-1).getState()[29]));
-                System.out.println("=============================");
-                System.out.println(Arrays.toString(temp4[29]));
-                System.out.println("=============================");
-                System.out.println(Arrays.toString(temp40[29]));
-
-                 */
             }
         }
         return newPopulation;

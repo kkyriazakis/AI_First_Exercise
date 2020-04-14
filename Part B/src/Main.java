@@ -19,9 +19,107 @@ public class Main {
         }
         List<Chromosome> newPopulation = rouletteWheelSelection(population);
 
-        for(Chromosome i:newPopulation){
-            System.out.println( i.getScore() );
+        twoPointVertical(newPopulation);
+    }
+
+    public static List<Chromosome> twoPointVertical(List<Chromosome> iPopulation) {
+        Chromosome c1,c2;
+        List<Chromosome> fPopulation = new LinkedList<>();
+        int point1, point2;
+        int [][] init1, init2, fin1, fin2;
+
+        fin1 = new int[30][14];
+        fin2 = new int[30][14];
+
+        for (int i=0; i<iPopulation.size()/2; i++ ){
+            point1 = new Random().nextInt(14);
+            point2 = new Random().nextInt(14 - point1) + point1;    //System.out.println(point1 + " " + point2);
+
+            init1 = iPopulation.get(2*i).getState();
+            try {
+                init2 = iPopulation.get(2*i + 1).getState();
+            }catch ( ArrayIndexOutOfBoundsException e ) { break; }
+
+
+            for (int x=0; x<30; x++){
+                for (int y=0; y<14; y++){
+                    if ( y <= point1 ){
+                        fin1[x][y] = init1[x][y];
+                        fin2[x][y] = init2[x][y];
+                    }
+                    else if ( y <= point2 ){
+                        fin1[x][y] = init2[x][y];
+                        fin2[x][y] = init1[x][y];
+                    }
+                    else {
+                        fin1[x][y] = init1[x][y];
+                        fin2[x][y] = init2[x][y];
+                    }
+                }
+            }
+            c1 = generateChromosome();
+            c2 = generateChromosome();
+
+            c1.setState(fin1);
+            c2.setState(fin2);
+
+            fPopulation.add(c1);
+            fPopulation.add(c2);
         }
+
+        return fPopulation;
+    }
+
+
+    public static List<Chromosome> twpPointCrossVertical(List<Chromosome> selected){
+        List<Chromosome> newPopulation = new ArrayList<>();
+
+        for (int i=1; i<selected.size(); i=i+2){
+            int rnd1 = new Random().nextInt(selected.get(i).getState().length/2);
+            int rnd2 = new Random().nextInt(selected.get(i).getState().length/2)+selected.get(i).getState().length/2;
+
+            int[][] temp4 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
+
+            int[][] temp40 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
+
+            for(int j=0;j<selected.get(i).getState().length;j++){
+                if(j<rnd1){
+                    for (int x=0;x<selected.get(i).getState()[0].length;x++){
+                        temp4[j][x]=selected.get(i).getState()[j][x];
+                        temp40[j][x]=selected.get(i-1).getState()[j][x];
+                    }
+                }
+                if(j>=rnd1 && j<rnd2){
+                    for (int x=0;x<selected.get(i).getState()[0].length;x++){
+                        temp4[j][x]=selected.get(i-1).getState()[j][x];
+                        temp40[j][x]=selected.get(i).getState()[j][x];
+                    }
+                }
+                if(j>=rnd2){
+                    for (int x=0;x<selected.get(i).getState()[0].length;x++){
+                        temp4[j][x]=selected.get(i).getState()[j][x];
+                        temp40[j][x]=selected.get(i-1).getState()[j][x];
+                    }
+                }
+                Chromosome c1 = new Chromosome(temp4,ChromosomeID);
+                ChromosomeID++;
+                Chromosome c2 = new Chromosome(temp40,ChromosomeID);
+                ChromosomeID++;
+                newPopulation.add(c1);
+                newPopulation.add(c2);
+                /*
+                System.out.println(Arrays.toString(selected.get(i).getState()[29]));
+                System.out.println("=============================");
+                System.out.println(Arrays.toString(selected.get(i-1).getState()[29]));
+                System.out.println("=============================");
+                System.out.println(Arrays.toString(temp4[29]));
+                System.out.println("=============================");
+                System.out.println(Arrays.toString(temp40[29]));
+
+                 */
+            }
+        }
+        return newPopulation;
     }
 
     public static List<Chromosome> rouletteWheelSelection(Chromosome[] iPopulation){

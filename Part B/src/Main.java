@@ -1,24 +1,57 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Main {
 
     private static int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
     private static int ChromosomeID = 1;
+    private static int selectionFactor = 2;
+    private static int PopulationSize = 500;
 
     public static void main(String[] args) {
 
-        Chromosome t = generateChromosome();
+        Chromosome[] population = new Chromosome[PopulationSize];
 
-        //t = randomizeChromosome(t);
+        for (int i=0; i<PopulationSize; i++){
+            Chromosome t = randomizeChromosome(generateChromosome());
+            boolean x = checkFeasibility( t );
+            t.updateScore();
+            population[i] = t;
+        }
+        List<Chromosome> newPopulation = rouletteWheelSelection(population);
 
-        boolean x = checkFeasibility( t );
-        System.out.println( "Feasible = "+ x );
-        t.updateScore();
-        System.out.println( "score = "+ t.getScore() );
-
+        for(Chromosome i:newPopulation){
+            System.out.println( i.getScore() );
+        }
     }
+
+    public static List<Chromosome> rouletteWheelSelection(Chromosome[] iPopulation){
+        int selectionSize = iPopulation.length/selectionFactor;  //Keep half of the original
+
+        double fitness;
+        double[] probFitness = new double[iPopulation.length];
+        double[] sumFit = new double[iPopulation.length];
+
+        double score = iPopulation[0].getScore()/1000;  //TODO CHECK IF NEED
+        sumFit[0] = 1/score;
+        for (int i=1; i<iPopulation.length; i++){
+            score = iPopulation[i].getScore()/1000; //TODO CHECK IF NEED
+            fitness = 1/score;
+            sumFit[i] = sumFit[i-1] + fitness;
+        }
+
+        Random rand = new Random();
+        List<Chromosome> newPopulation = new ArrayList<>();
+        for (int i=0; i<selectionSize; i++){
+            double randomFitness = rand.nextDouble() * sumFit[probFitness.length-1];
+            int index = Arrays.binarySearch(sumFit,randomFitness);
+            if (index < 0){
+                index = Math.abs(index + 1);
+            }
+            newPopulation.add(iPopulation[index]);
+        }
+        return newPopulation;
+    }
+
 
     public static int[] getColumn(int[][] x, int col){
         int[] y = new int[x.length];
@@ -29,7 +62,7 @@ public class Main {
     }
 
     public static Chromosome randomizeChromosome(Chromosome chr){
-        int [][] pop = chr.getPopulation();
+        int [][] pop = chr.getState();
         int [] col;
 
         for(int i=0; i<14; i++){
@@ -39,7 +72,7 @@ public class Main {
             for (int w=0; w<30; w++){
                 tmp.add(col[w]);
             }
-            Collections.shuffle(tmp);
+            Collections.shuffle(tmp, new Random());
             col = tmp.stream().mapToInt(x->x).toArray();
 
             for(int j=0; j<col.length; j++){    //SET RANDOMIZED COLUMN BACK TO POPULATION
@@ -54,7 +87,7 @@ public class Main {
 
 
     public static boolean checkFeasibility(Chromosome chromosome){
-        int[][] array = chromosome.getPopulation();
+        int[][] array = chromosome.getState();
         //int[][] array = testArray;
         int morningW1, morningW2;
         int afternoonW1, afternoonW2;

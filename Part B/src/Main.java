@@ -6,25 +6,104 @@ public class Main {
     private static int ChromosomeID = 1;
     private static int selectionFactor = 2;
     private static int PopulationSize = 500;
+    private static int maxIterations = 1000;
+    private static int maxIterationsWithoutChange = 70;
 
     public static void main(String[] args) {
+        int noChangeCtr,bestscore,bestid;
+        List<Chromosome> population = new LinkedList<>();
 
-        Chromosome[] population = new Chromosome[PopulationSize];
-
-        for (int i=0; i<PopulationSize; i++){
-            Chromosome t = randomizeChromosome(generateChromosome());
-            boolean x = checkFeasibility( t );
-            t.updateScore();
-            population[i] = t;
+        for (int i=0; i<PopulationSize; i++){   //CREATE INITIAL POPULATION
+            Chromosome chr = randomizeChromosome(generateChromosome());
+            if (checkFeasibility(chr)){ //FEASIBILITY CHECK
+                chr.updateScore();  //CHROMOSOME RATING
+                population.add(chr);
+            }
+            else { i--; }
         }
-        List<Chromosome> newPopulation = rouletteWheelSelection(population);
 
-        List<Chromosome> tmp;
-        tmp = twoPointVertical(newPopulation);
-        tmp = twoPointHorizontal(newPopulation);
-        flipMutate(newPopulation);
-        boundaryMutation(newPopulation);
+        List<Chromosome> selected, tmp1, tmp_pop;
+        bestscore = 9000;
+        bestid = 0;
+        noChangeCtr = 0;
+        for(int i=0; i<maxIterations; i++){
+            if (noChangeCtr >= 70)
+                break;
 
+            selected = rouletteWheelSelection(population); //SELECTION
+
+            /* -- CROSSOVER -- */
+            tmp1 = twoPointVertical(selected);
+            //tmp1 = twoPointHorizontal(selected);
+
+            /* -- MUTATION -- */
+            flipMutate(tmp1);
+            //boundaryMutation(tmp1);
+            //inversionMutation(tmp1);
+
+            
+            //FILL THE BLANKS
+            tmp_pop = new LinkedList<>();
+            for (int j=0; j<PopulationSize; j++){
+                if ( j<tmp1.size() ){
+                    tmp_pop.add( tmp1.get(j) );
+                }
+                else {
+                    tmp_pop.add( population.get(j = tmp1.size()) );
+                }
+            }
+            population = tmp_pop;
+            sortByScore( population );
+
+            if (population.get(0).getScore() == bestscore && population.get(0).getId() == bestid){
+                noChangeCtr++;
+            }
+            else {
+                bestscore = population.get(0).getScore();
+                bestid = population.get(0).getId();
+                noChangeCtr = 0;
+            }
+        }
+
+        //TODO PRINT POPULATION[0]
+
+    }
+
+    public static void inversionMutation(List<Chromosome> selected){
+        for (int z=0; z<selected.size(); z++) {
+            Chromosome c = selected.get(z);
+            int x = new Random().nextInt(c.getState()[0].length);
+            int i = new Random().nextInt(c.getState().length);
+            int j = new Random().nextInt(c.getState().length);
+
+            int[][] tmp = c.getState().clone();
+
+            if (i < j) {
+                int b=j;
+                for (int y = i; y < j; y++) {
+                    tmp[b][x] = c.getState()[y][x];
+                    b--;
+                }
+            } else {
+                int b=i;
+                for (int y = j; y < i; y++) {
+                    tmp[b][x] = c.getState()[y][x];
+                    b--;
+                }
+            }
+            c.setState(tmp);
+        }
+    }
+
+
+    public static void sortByScore(List<Chromosome> list){
+        Collections.sort(list, new Comparator<Chromosome>() {
+            @Override
+            public int compare(Chromosome o1, Chromosome o2) {
+                double i = o1.getScore() - o2.getScore();
+                return (int)i;
+            }
+        });
     }
 
 
@@ -162,17 +241,17 @@ public class Main {
         return newPopulation;
     }
 
-    public static List<Chromosome> rouletteWheelSelection(Chromosome[] iPopulation){
-        int selectionSize = iPopulation.length/selectionFactor;  //Keep half of the original
+    public static List<Chromosome> rouletteWheelSelection(List<Chromosome> iPopulation){
+        int selectionSize = iPopulation.size()/selectionFactor;  //Keep half of the original
 
         double fitness;
-        double[] probFitness = new double[iPopulation.length];
-        double[] sumFit = new double[iPopulation.length];
+        double[] probFitness = new double[iPopulation.size()];
+        double[] sumFit = new double[iPopulation.size()];
 
-        double score = iPopulation[0].getScore()/1000;  //TODO CHECK IF NEED
+        double score = iPopulation.get(0).getScore()/1000;  //TODO CHECK IF NEED
         sumFit[0] = 1/score;
-        for (int i=1; i<iPopulation.length; i++){
-            score = iPopulation[i].getScore()/1000; //TODO CHECK IF NEED
+        for (int i=1; i<iPopulation.size(); i++){
+            score = iPopulation.get(i).getScore()/1000; //TODO CHECK IF NEED
             fitness = 1/score;
             sumFit[i] = sumFit[i-1] + fitness;
         }
@@ -185,7 +264,7 @@ public class Main {
             if (index < 0){
                 index = Math.abs(index + 1);
             }
-            newPopulation.add(iPopulation[index]);
+            newPopulation.add(iPopulation.get(index));
         }
         return newPopulation;
     }

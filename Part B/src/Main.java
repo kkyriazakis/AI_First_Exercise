@@ -5,9 +5,9 @@ public class Main {
     private static final int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
     private static int ChromosomeID = 1;
     private static final int selectionFactor = 2;
-    private static final int PopulationSize = 1500;
-    private static final int maxIterations = 300;
-    private static final int maxIterationsWithoutChange = 40;
+    private static final int PopulationSize = 1000;
+    private static final int maxIterations = 5000;
+    private static final int maxIterationsWithoutChange = 1000;
 
     public static void main(String[] args) {
         int noChangeCtr,bestscore;
@@ -32,8 +32,9 @@ public class Main {
             selected = rouletteWheelSelection(population); //SELECTION
 
             /* -- CROSSOVER -- */
-            tmp1 = twoPointVertical(selected);
-            //tmp1 = twoPointHorizontal(selected);
+            //tmp1 = twoPointVertical(selected);
+            tmp1 = twoPointHorizontal(selected);
+            //tmp1 = selected;
 
             /* -- MUTATION -- */
             //flipMutate(tmp1);
@@ -49,11 +50,12 @@ public class Main {
                     chr = tmp1.get(j);
                     if (checkFeasibility( chr )){ //FEASIBILITY CHECK
                         chr.updateScore();  //CHROMOSOME RATING
-                        population.add(chr);
+                        tmp_pop.add(chr);
                     }
                     else { tmp1.remove(j); j--; }
                 }
                 else {
+                    if (tmp1.size()!=0) {System.out.print(tmp1.size()+" "); }
                     tmp_pop.add( population.get(j - tmp1.size()) );
                 }
             }
@@ -72,12 +74,10 @@ public class Main {
 
         System.out.println("Solution found");
         System.out.println("cost = " + solution.getScore());
-
     }
 
     public static void inversionMutation(List<Chromosome> selected){
-        for (int z=0; z<selected.size(); z++) {
-            Chromosome c = selected.get(z);
+        for (Chromosome c : selected) {
             int x = new Random().nextInt(c.getState()[0].length);
             int i = new Random().nextInt(c.getState().length);
             int j = new Random().nextInt(c.getState().length);
@@ -85,13 +85,13 @@ public class Main {
             int[][] tmp = c.getState().clone();
 
             if (i < j) {
-                int b=j;
+                int b = j;
                 for (int y = i; y < j; y++) {
                     tmp[b][x] = c.getState()[y][x];
                     b--;
                 }
             } else {
-                int b=i;
+                int b = i;
                 for (int y = j; y < i; y++) {
                     tmp[b][x] = c.getState()[y][x];
                     b--;
@@ -111,6 +111,7 @@ public class Main {
 
 
     public static void flipMutate(List<Chromosome> iPopulation) {
+
         Chromosome chr;
         int point1, point2;
         int [][] state = new int[0][0];
@@ -164,7 +165,7 @@ public class Main {
 
         for (int i=0; i<iPopulation.size()/2; i++ ){
             point1 = new Random().nextInt(14);
-            point2 = new Random().nextInt(14 - point1) + point1;    //System.out.println(point1 + " " + point2);
+            point2 = new Random().nextInt(14 - point1) + point1;
 
             init1 = iPopulation.get(2*i).getState();
             try {
@@ -206,7 +207,8 @@ public class Main {
 
         for (int i=1; i<selected.size(); i=i+2){
             int rnd1 = new Random().nextInt(selected.get(i).getState().length/2);
-            int rnd2 = new Random().nextInt(selected.get(i).getState().length/2)+selected.get(i).getState().length/2;
+            int rnd2 = new Random().nextInt(selected.get(i).getState().length/2) + selected.get(i).getState().length/2;
+
 
             int[][] temp4 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
             int[][] temp40 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
@@ -247,10 +249,10 @@ public class Main {
         double[] probFitness = new double[iPopulation.size()];
         double[] sumFit = new double[iPopulation.size()];
 
-        double score = iPopulation.get(0).getScore()/1000;  //TODO CHECK IF NEED
+        double score = iPopulation.get(0).getScore();
         sumFit[0] = 1/score;
         for (int i=1; i<iPopulation.size(); i++){
-            score = iPopulation.get(i).getScore()/1000; //TODO CHECK IF NEED
+            score = iPopulation.get(i).getScore();
             fitness = 1/score;
             sumFit[i] = sumFit[i-1] + fitness;
         }

@@ -2,15 +2,15 @@ import java.util.*;
 
 public class Main {
 
-    private static int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
+    private static final int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
     private static int ChromosomeID = 1;
-    private static int selectionFactor = 2;
-    private static int PopulationSize = 500;
-    private static int maxIterations = 1000;
-    private static int maxIterationsWithoutChange = 70;
+    private static final int selectionFactor = 2;
+    private static final int PopulationSize = 500;
+    private static final int maxIterations = 1000;
+    private static final int maxIterationsWithoutChange = 70;
 
     public static void main(String[] args) {
-        int noChangeCtr,bestscore,bestid;
+        int noChangeCtr,bestscore;
         List<Chromosome> population = new LinkedList<>();
 
         for (int i=0; i<PopulationSize; i++){   //CREATE INITIAL POPULATION
@@ -24,10 +24,9 @@ public class Main {
 
         List<Chromosome> selected, tmp1, tmp_pop;
         bestscore = 9000;
-        bestid = 0;
         noChangeCtr = 0;
         for(int i=0; i<maxIterations; i++){
-            if (noChangeCtr >= 70)
+            if (noChangeCtr >= maxIterationsWithoutChange)
                 break;
 
             selected = rouletteWheelSelection(population); //SELECTION
@@ -41,31 +40,36 @@ public class Main {
             //boundaryMutation(tmp1);
             //inversionMutation(tmp1);
 
-            
+
             //FILL THE BLANKS
             tmp_pop = new LinkedList<>();
             for (int j=0; j<PopulationSize; j++){
                 if ( j<tmp1.size() ){
-                    tmp_pop.add( tmp1.get(j) );
+                    if (checkFeasibility( tmp1.get(j) )){ //FEASIBILITY CHECK
+                        tmp_pop.get(j).updateScore();  //CHROMOSOME RATING
+                        population.add(tmp1.get(j));
+                    }
+                    else { j--; }
                 }
                 else {
-                    tmp_pop.add( population.get(j = tmp1.size()) );
+                    tmp_pop.add( population.get(j - tmp1.size()) );
                 }
             }
             population = tmp_pop;
             sortByScore( population );
 
-            if (population.get(0).getScore() == bestscore && population.get(0).getId() == bestid){
+            if (population.get(0).getScore() >= bestscore){
                 noChangeCtr++;
             }
             else {
                 bestscore = population.get(0).getScore();
-                bestid = population.get(0).getId();
                 noChangeCtr = 0;
             }
         }
+        Chromosome solution = population.get(0);
 
-        //TODO PRINT POPULATION[0]
+        System.out.println("Solution found");
+        System.out.println("cost = " + solution.getScore());
 
     }
 
@@ -97,12 +101,9 @@ public class Main {
 
 
     public static void sortByScore(List<Chromosome> list){
-        Collections.sort(list, new Comparator<Chromosome>() {
-            @Override
-            public int compare(Chromosome o1, Chromosome o2) {
-                double i = o1.getScore() - o2.getScore();
-                return (int)i;
-            }
+        list.sort((o1, o2) -> {
+            double i = o1.getScore() - o2.getScore();
+            return (int) i;
         });
     }
 
@@ -112,9 +113,9 @@ public class Main {
         int point1, point2;
         int [][] state = new int[0][0];
 
-        for (int i=0; i<iPopulation.size(); i++ ){
-            chr = iPopulation.get(i);
-            for (int j=0; j<5; j++) {
+        for (Chromosome chromosome : iPopulation) {
+            chr = chromosome;
+            for (int j = 0; j < 5; j++) {
                 point1 = new Random().nextInt(30);
                 point2 = new Random().nextInt(14);
                 state = chr.getState();
@@ -130,24 +131,20 @@ public class Main {
             }
             chr.setState(state);
         }
-        return;
     }
 
     public static void boundaryMutation(List<Chromosome> selected){
-
-        for (int i=0; i<selected.size(); i++){
-            Chromosome c = selected.get(i);
-
+        for (Chromosome c : selected) {
             //Maybe get the upper bound of 1% online
-            for (int j=0; j<5;j++){
-                int x=new Random().nextInt(c.getState().length);
-                int y=new Random().nextInt(c.getState()[0].length);
-                boolean coin= new Random().nextBoolean();
+            for (int j = 0; j < 5; j++) {
+                int x = new Random().nextInt(c.getState().length);
+                int y = new Random().nextInt(c.getState()[0].length);
+                boolean coin = new Random().nextBoolean();
                 int[][] tmp = c.getState();
-                if (coin){
-                    tmp[x][y]=3;
-                }else{
-                    tmp[x][y]=0;
+                if (coin) {
+                    tmp[x][y] = 3;
+                } else {
+                    tmp[x][y] = 0;
                 }
                 c.setState(tmp);
             }

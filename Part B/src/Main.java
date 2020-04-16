@@ -5,9 +5,9 @@ public class Main {
     private static final int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
     private static int ChromosomeID = 1;
     private static final int selectionFactor = 2;
-    private static final int PopulationSize = 500;
-    private static final int maxIterations = 1000;
-    private static final int maxIterationsWithoutChange = 70;
+    private static final int PopulationSize = 1500;
+    private static final int maxIterations = 300;
+    private static final int maxIterationsWithoutChange = 40;
 
     public static void main(String[] args) {
         int noChangeCtr,bestscore;
@@ -36,20 +36,22 @@ public class Main {
             //tmp1 = twoPointHorizontal(selected);
 
             /* -- MUTATION -- */
-            flipMutate(tmp1);
+            //flipMutate(tmp1);
             //boundaryMutation(tmp1);
-            //inversionMutation(tmp1);
+            inversionMutation(tmp1);
 
 
             //FILL THE BLANKS
             tmp_pop = new LinkedList<>();
+            Chromosome chr;
             for (int j=0; j<PopulationSize; j++){
                 if ( j<tmp1.size() ){
-                    if (checkFeasibility( tmp1.get(j) )){ //FEASIBILITY CHECK
-                        tmp_pop.get(j).updateScore();  //CHROMOSOME RATING
-                        population.add(tmp1.get(j));
+                    chr = tmp1.get(j);
+                    if (checkFeasibility( chr )){ //FEASIBILITY CHECK
+                        chr.updateScore();  //CHROMOSOME RATING
+                        population.add(chr);
                     }
-                    else { j--; }
+                    else { tmp1.remove(j); j--; }
                 }
                 else {
                     tmp_pop.add( population.get(j - tmp1.size()) );

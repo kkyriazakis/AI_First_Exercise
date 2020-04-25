@@ -4,64 +4,65 @@ public class Main {
 
     private static final int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
     private static int ChromosomeID = 1;
-    private static final double selectionFactor = 0.9;
-    private static final int PopulationSize = 5000;
+    private static final double selectionFactor = 0.6;
+    private static final int PopulationSize = 1000;
     private static final int maxIterationsWithoutChange = 10000;
-    private static final double mutationChance = 0.8;
+    private static final double mutationChance = 0.5;
 
     public static void main(String[] args) {
-        int noChangeCtr,bestscore;
+        int noChangeCtr = 0;
+        int bestscore = Integer.MAX_VALUE;
         List<Chromosome> population = new LinkedList<>();
+        List<Chromosome> selected, tmp, new_popul;
 
-        for (int i=0; i<PopulationSize; i++){   //CREATE INITIAL POPULATION
-            Chromosome chr = randomizeChromosome(generateChromosome());
+        /*----- CREATE INITIAL POPULATION -----*/
+        while (population.size() < PopulationSize){
+            Chromosome chr = randomizeChromosome( generateBaseChromosome() );
             if (checkFeasibility(chr)){ //FEASIBILITY CHECK
                 chr.updateScore();  //CHROMOSOME RATING
                 population.add(chr);
             }
-            else { i--; }
         }
 
-        List<Chromosome> selected, tmp, tmp_popul;
-        bestscore = Integer.MAX_VALUE;
-        noChangeCtr = 0;
-
+        int i = 1;
+        /*----- START GENETIC ALGORITHM PROCCESS -----*/
         while ( noChangeCtr < maxIterationsWithoutChange) {
             selected = rouletteWheelSelection(population); //SELECTION
 
-            /* -- CROSSOVER -- */
-            //tmp = twoPointVertical(selected);
+            /* ---- CROSSOVER ---- */
             tmp = twoPointHorizontal(selected);
+            //tmp = twoPointVertical(selected);
 
-            /* -- MUTATION -- */
+            /* ---- MUTATION ---- */
+            swapMutation(tmp);
             //flipMutate(tmp);
             //boundaryMutation(tmp);
             //inversionMutation(tmp);
-            swapMutation(tmp);
+
 
             //FILL THE BLANKS
-            tmp_popul = new LinkedList<>();
+            new_popul = new LinkedList<>();
             Chromosome chr;
 
             for (int j=0; j<PopulationSize; j++){
-                if ( j<tmp.size() ){
+                if ( j < tmp.size() ){
                     chr = tmp.get(j);
                     if (checkFeasibility( chr )){ //FEASIBILITY CHECK
                         chr.updateScore();  //CHROMOSOME RATING
-                        tmp_popul.add(chr);
+                        new_popul.add(chr);
                     }
                     else
                         tmp.remove(j--);
                 }
                 else
-                    tmp_popul.add(population.get(j - tmp.size()));
-
+                    new_popul.add( population.get(j - tmp.size()) );
             }
 
-            sortByScore( tmp_popul );
-            population = new LinkedList<>(tmp_popul);
-            //System.out.println("worst cost = " + population.get( population.size()-1 ).getScore());
-            System.out.println(noChangeCtr + " -- FeasibleSize( " + tmp.size() +" ) -- 1st cost = " + population.get(0).getScore());
+            sortByScore( new_popul );
+            population = new LinkedList<>(new_popul);
+
+            /* ---- PRINT DEBUG INFO ---- */
+            System.out.printf("%-4d -- FeasibleSize( %-3d ) -- Best cost = %-6d -- Generation[%d]\n", noChangeCtr, tmp.size(), population.get(0).getScore(),i++);
 
             if (population.get(0).getScore() >= bestscore){
                 noChangeCtr++;
@@ -74,14 +75,14 @@ public class Main {
 
         Chromosome solution = population.get(0);
 
-        System.out.println("\nSolution found");
-        System.out.println("ID = " + solution.getId());
-        System.out.println("cost = " + solution.getScore());
+        System.out.println("\nBest Solution found:");
+        System.out.println("Chromosome ID = " + solution.getId());
+        System.out.println("Chromosome Cost = " + solution.getScore());
     }
 
     public static void swapMutation(List<Chromosome> selected){
         for (Chromosome c : selected) {
-            int col = new Random().nextInt(14);   //static column
+            int col = new Random().nextInt(14); //Random column
             int[][] init = c.getState();
 
             int i = new Random().nextInt(30);
@@ -366,7 +367,7 @@ public class Main {
     }
 
 
-    public static Chromosome generateChromosome(){
+    public static Chromosome generateBaseChromosome(){
         int[][] pop = new int[30][14];
         int NumOfDays = hConst.length;
         int NumOfEmployees = 30;
@@ -391,10 +392,7 @@ public class Main {
                 }
             }
         }
-        Chromosome chr = new Chromosome(pop, ChromosomeID);
-        ChromosomeID++;
-
-        return chr;
+        return new Chromosome(pop, ChromosomeID++);
     }
 
 

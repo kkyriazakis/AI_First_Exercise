@@ -62,7 +62,7 @@ public class Main {
             population = new LinkedList<>(new_popul);
 
             /* ---- PRINT DEBUG INFO ---- */
-            System.out.printf("%-4d -- FeasibleSize( %-3d ) -- Best cost = %-6d -- Generation[%d]\n", noChangeCtr, tmp.size(), population.get(0).getScore(),i++);
+            System.out.printf("%-4d -- FeasibleSize(%-3d) -- Best cost = %-6d -- Generation[%d]\n", noChangeCtr, tmp.size(), population.get(0).getScore(),i++);
 
             if (population.get(0).getScore() >= bestscore){
                 noChangeCtr++;
@@ -80,19 +80,19 @@ public class Main {
         System.out.println("Chromosome Cost = " + solution.getScore());
     }
 
-    public static void swapMutation(List<Chromosome> selected){
-        for (Chromosome c : selected) {
+    public static void swapMutation(List<Chromosome> population){
+        int i,j;
+        for (Chromosome c : population) {
             int col = new Random().nextInt(14); //Random column
             int[][] init = c.getState();
 
-            int i = new Random().nextInt(30);
-            int j = new Random().nextInt(30);
+            i = new Random().nextInt(30);
+            j = new Random().nextInt(30);
             double mut = new Random().nextDouble();
 
             if( i!=j && mut <= mutationChance){
                 int a = init[i][col];
                 int b = init[j][col];
-
                 init[i][col] = b;
                 init[j][col] = a;
 
@@ -101,43 +101,46 @@ public class Main {
         }
     }
 
-    public static void inversionMutation(List<Chromosome> selected){
-        for (Chromosome ch : selected) {
+    public static void inversionMutation(List<Chromosome> population){
+        for (Chromosome c : population) {
             double mut = new Random().nextDouble();
             if(mut > mutationChance)
                 continue;
 
-            int x = new Random().nextInt(14);   //static column
-            int i = new Random().nextInt(28);
+            int x = new Random().nextInt(c.getState()[0].length); //column
+            int i = new Random().nextInt(c.getState().length);
+            int j = new Random().nextInt(c.getState().length);
+            int[][] tmp = c.getState().clone();
 
-            int[][] init = ch.getState();
-
-            int a = init[i][x];
-            int b = init[i+1][x];
-            int c = init[i+2][x];
-
-            init[i][x]   = c;
-            init[i+1][x] = b;
-            init[i+2][x] = a;
-
-            ch.setState(init);
+            if (i < j) {
+                int b = j;
+                for (int y = i; y < j; y++) {
+                    tmp[b][x] = c.getState()[y][x];
+                    b--;
+                }
+            }
+            else {
+                int b = i;
+                for (int y = j; y < i; y++) {
+                    tmp[b][x] = c.getState()[y][x];
+                    b--;
+                }
+            }
+            c.setState(tmp);
         }
     }
 
-    public static void flipMutate(List<Chromosome> iPopulation) {
 
-        Chromosome chr;
+    public static void flipMutate(List<Chromosome> population) {
         int point1, point2;
         int [][] state = new int[0][0];
 
-        for (Chromosome chromosome : iPopulation) {
-            chr = chromosome;
-
+        for (Chromosome chr : population) {
             double mut = new Random().nextDouble();
             if(mut > mutationChance)
                 continue;
 
-            for (int j = 0; j < 5; j++) {
+            for (int j = 0; j < 3; j++) {   //THREE RANDOM LOCATIONS
                 point1 = new Random().nextInt(30);
                 point2 = new Random().nextInt(14);
                 state = chr.getState();
@@ -155,23 +158,23 @@ public class Main {
         }
     }
 
-    public static void boundaryMutation(List<Chromosome> selected){
-        for (Chromosome c : selected) {
+    public static void boundaryMutation(List<Chromosome> population){
+        for (Chromosome chr : population) {
             double mut = new Random().nextDouble();
             if(mut > mutationChance)
                 continue;
 
             for (int j = 0; j < 2; j++) { //Maybe get the upper bound of 1% online
-                int x = new Random().nextInt(c.getState().length);
-                int y = new Random().nextInt(c.getState()[0].length);
+                int x = new Random().nextInt(chr.getState().length);
+                int y = new Random().nextInt(chr.getState()[0].length);
                 boolean coin = new Random().nextBoolean();
-                int[][] tmp = c.getState();
+                int[][] tmp = chr.getState();
                 if (coin) {
                     tmp[x][y] = 3;
                 } else {
                     tmp[x][y] = 0;
                 }
-                c.setState(tmp);
+                chr.setState(tmp);
             }
         }
     }
@@ -213,7 +216,6 @@ public class Main {
             }
             c1 = new Chromosome(fin1,ChromosomeID++);
             c2 = new Chromosome(fin2,ChromosomeID++);
-
             fPopulation.add(c1);
             fPopulation.add(c2);
         }
@@ -222,40 +224,38 @@ public class Main {
     }
 
 
-    public static List<Chromosome> twoPointHorizontal(List<Chromosome> selected){
+    public static List<Chromosome> twoPointHorizontal(List<Chromosome> iPopulation){
         List<Chromosome> newPopulation = new ArrayList<>();
 
-        for (int i=1; i<selected.size(); i=i+2){
-            int rnd1 = new Random().nextInt(selected.get(i).getState().length/2);
-            int rnd2 = new Random().nextInt(selected.get(i).getState().length/2) + selected.get(i).getState().length/2;
+        for (int i=1; i<iPopulation.size(); i+=2){
+            int rnd1 = new Random().nextInt(iPopulation.get(i).getState().length/2);
+            int rnd2 = new Random().nextInt(iPopulation.get(i).getState().length/2) + iPopulation.get(i).getState().length/2;
 
+            int[][] temp1 = new int[iPopulation.get(i).getState().length][iPopulation.get(i).getState()[0].length];
+            int[][] temp2 = new int[iPopulation.get(i).getState().length][iPopulation.get(i).getState()[0].length];
 
-            int[][] temp4 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
-            int[][] temp40 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
-
-            for(int j=0;j<selected.get(i).getState().length;j++){
-                if(j<rnd1){
-                    for (int x=0;x<selected.get(i).getState()[0].length;x++){
-                        temp4[j][x] = selected.get(i).getState()[j][x];
-                        temp40[j][x] = selected.get(i-1).getState()[j][x];
+            for(int j=0;j<iPopulation.get(i).getState().length;j++){
+                if( j < rnd1){
+                    for (int x=0;x<iPopulation.get(i).getState()[0].length;x++){
+                        temp1[j][x] = iPopulation.get(i).getState()[j][x];
+                        temp2[j][x] = iPopulation.get(i-1).getState()[j][x];
                     }
                 }
-                if(j>=rnd1 && j<rnd2){
-                    for (int x=0;x<selected.get(i).getState()[0].length;x++){
-                        temp4[j][x] = selected.get(i-1).getState()[j][x];
-                        temp40[j][x] = selected.get(i).getState()[j][x];
+                if( j >= rnd1 && j < rnd2){
+                    for (int x=0;x<iPopulation.get(i).getState()[0].length;x++){
+                        temp1[j][x] = iPopulation.get(i-1).getState()[j][x];
+                        temp2[j][x] = iPopulation.get(i).getState()[j][x];
                     }
                 }
-                if(j>=rnd2){
-                    for (int x=0;x<selected.get(i).getState()[0].length;x++){
-                        temp4[j][x] = selected.get(i).getState()[j][x];
-                        temp40[j][x] = selected.get(i-1).getState()[j][x];
+                if( j>= rnd2){
+                    for (int x=0;x<iPopulation.get(i).getState()[0].length;x++){
+                        temp1[j][x] = iPopulation.get(i).getState()[j][x];
+                        temp2[j][x] = iPopulation.get(i-1).getState()[j][x];
                     }
                 }
             }
-            Chromosome c1 = new Chromosome(temp4,ChromosomeID++);
-            Chromosome c2 = new Chromosome(temp40,ChromosomeID++);
-
+            Chromosome c1 = new Chromosome(temp1,ChromosomeID++);
+            Chromosome c2 = new Chromosome(temp2,ChromosomeID++);
             newPopulation.add(c1);
             newPopulation.add(c2);
         }
@@ -341,9 +341,8 @@ public class Main {
                     case 1: morningW1++; break;
                     case 2: afternoonW1++; break;
                     case 3: nightW1++; break;
-                    default:
-                        System.out.println(array[i][j]+" is not an option!");
-                        return false;
+                    default:System.out.println(array[i][j]+" is not an option!");
+                            return false;
                 }
 
                 switch (array[i][j+7]){     //CHECKING SECOND WEEK
@@ -351,9 +350,8 @@ public class Main {
                     case 1: morningW2++; break;
                     case 2: afternoonW2++; break;
                     case 3: nightW2++; break;
-                    default:
-                        System.out.println(array[i][j+7]+" is not an option!");
-                        return false;
+                    default:System.out.println(array[i][j+7]+" is not an option!");
+                            return false;
                 }
             }
             if(!(morningW1==hConst[j][0] && afternoonW1==hConst[j][1] && nightW1==hConst[j][2])){

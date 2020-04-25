@@ -8,7 +8,7 @@ public class Search {
         this.myGrid = myGrid;
     }
 
-    public int coord(int i, int j){return (i*myGrid.getNumOfColumns())+j;}
+    public int coord(int i, int j){return i*myGrid.getNumOfColumns() + j;}
 
     public int[] coord(int a){
         int[] toReturn = new int[2];
@@ -27,11 +27,11 @@ public class Search {
     }
 
     public void sortByCost(LinkedList<Node> list){
-        Collections.sort(list, new Comparator<Node>() {
+        list.sort(new Comparator<>() {
             @Override
             public int compare(Node o1, Node o2) {
-                double i = o1.getf()*100 - o2.getf()*100;
-                return (int)i;
+                double i = o1.getf() * 100 - o2.getf() * 100;
+                return (int) i;
             }
         });
     }
@@ -40,12 +40,12 @@ public class Search {
         int[] x = coord(n.getId());
         int[] y = coord(myGrid.getTerminalidx());
 
-        return Math.sqrt( (x[0]-y[0])*(x[0]-y[0]) + (x[1]-y[1])*(x[1]-y[1]) );
+        return 3*Math.sqrt( (x[0]-y[0])*(x[0]-y[0]) + (x[1]-y[1])*(x[1]-y[1]) );
     }
 
     public boolean searchAndCompare(LinkedList<Node> list, Node target){
-        //O neos pateras kai apostasi briskete sto target
         Node old;
+
         for (int i=0; i<list.size(); i++){
             old = list.get(i);
             if(old.getId() == target.getId()){
@@ -108,6 +108,7 @@ public class Search {
         else{
             toReturn = new int[]{};
         }
+        System.out.println("RLTA* Exploration cost : " + explored.size() + "\n");
         return toReturn;
     }
 
@@ -161,6 +162,8 @@ public class Search {
         else{
             toReturn = new int[]{};
         }
+
+        System.out.println("A* Exploration cost : " + explored.size() + "\n");
         return toReturn;
     }
 
@@ -216,6 +219,7 @@ public class Search {
         else{
             toReturn = new int[]{};
         }
+        System.out.println("DFS Exploration cost : " + checked.size() + "\n");
         return toReturn;
     }
 
@@ -234,7 +238,6 @@ public class Search {
             tmp = fringe.pop();
             state = new Node(tmp.getId(),tmp.getParent());
             state.setg(state.getParent().getg() + myGrid.getCell(coord(state.getId())[0], coord(state.getId())[1]).getCost());
-
 
             if (state.getId() == myGrid.getTerminalidx()){  //FOUND GOAL
                 found = true;
@@ -264,6 +267,7 @@ public class Search {
         else{
             toReturn = new int[]{};
         }
+        System.out.println("BFS Exploration cost : " + explored.size() + "\n");
         return toReturn;
     }
 

@@ -19,7 +19,7 @@ class Grid {
 
 	private int start_idx = 96;
 	private int terminal_idx = 42;
-	private int grass_cost = 10;
+	private int grass_cost = 2;
 
 	Grid(){
 		this.init();
@@ -151,7 +151,7 @@ class Grid {
 					this.terminal_idx = Integer.parseInt(param.split(":")[1]);
 				}else if(param.split(":")[0].equalsIgnoreCase("grass_cost")){
 					// read cost for grass
-					//this.grass_cost = Integer.parseInt(param.split(":")[1]);
+					this.grass_cost = Integer.parseInt(param.split(":")[1]);
 				}
 				param = br.readLine();
 			}

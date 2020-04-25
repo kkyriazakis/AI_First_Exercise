@@ -34,21 +34,30 @@ class GridGenerator{
 	}
 
 	public static void main(String[] args) {
+		Search search;
 		String frame = "Random World";
 		Grid mygrid;
-		Search search;
 
-		mygrid = new Grid("world_examples/hard_a.world");
+		if (args.length<1)
+			mygrid = new Grid();
+		else if (args[0].equals("-i")){
+			mygrid = new Grid(args[1]);
+			frame = args[1].split("/")[1];
+		}else if (args[0].equals("-d")){
+			mygrid = new Grid(Integer.parseInt(args[1]),Integer.parseInt(args[2]));
+		}else{
+			mygrid = new Grid("world_examples/default.world");
+			frame = "default.world";
+		}
 
 		int N = mygrid.getNumOfRows();
 		int M = mygrid.getNumOfColumns();
 
 		search = new Search(mygrid);
 
-		//VisualizeGrid("World",N,M,mygrid.getWalls(),mygrid.getGrass(),new int[]{},mygrid.getStartidx(),mygrid.getTerminalidx());
-		VisualizeGrid("BFS"  ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.bfs(),       mygrid.getStartidx(),mygrid.getTerminalidx());
-		VisualizeGrid("DFS"  ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.dfs(),       mygrid.getStartidx(),mygrid.getTerminalidx());
-		VisualizeGrid("A*"   ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.a_star(),    mygrid.getStartidx(),mygrid.getTerminalidx());
-		VisualizeGrid("LRTA*",N,M,mygrid.getWalls(),mygrid.getGrass(), search.rlta_star(), mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid(frame+" - BFS"  ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.bfs(),       mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid(frame+" - DFS"  ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.dfs(),       mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid(frame+" - A*"   ,N,M,mygrid.getWalls(),mygrid.getGrass(), search.a_star(),    mygrid.getStartidx(),mygrid.getTerminalidx());
+		VisualizeGrid(frame+" - LRTA*",N,M,mygrid.getWalls(),mygrid.getGrass(), search.rlta_star(), mygrid.getStartidx(),mygrid.getTerminalidx());
 	}
 }

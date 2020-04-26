@@ -5,8 +5,8 @@ public class Main {
     private static final int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
     private static int ChromosomeID = 1;
     private static final double selectionFactor = 0.6;
-    private static final int PopulationSize = 1000;
-    private static final int maxIterationsWithoutChange = 10000;
+    private static final int PopulationSize = 5000;
+    private static final int maxIterationsWithoutChange = 2000;
     private static final double mutationChance = 0.5;
 
     public static void main(String[] args) {
@@ -30,8 +30,9 @@ public class Main {
             selected = rouletteWheelSelection(population); //SELECTION
 
             /* ---- CROSSOVER ---- */
-            tmp = twoPointHorizontal(selected);
+            //tmp = twoPointHorizontal(selected);
             //tmp = twoPointVertical(selected);
+            tmp = onePointSquareCrossover(selected);
 
             /* ---- MUTATION ---- */
             swapMutation(tmp);
@@ -62,7 +63,7 @@ public class Main {
             population = new LinkedList<>(new_popul);
 
             /* ---- PRINT DEBUG INFO ---- */
-            System.out.printf("%-4d -- FeasibleSize(%-3d) -- Best cost = %-6d -- Generation[%d]\n", noChangeCtr, tmp.size(), population.get(0).getScore(),i++);
+            System.out.printf("%-4d -- FeasibleSize( %-4d ) -- Best cost = %-6d -- Generation[%d]\n", noChangeCtr, tmp.size(), population.get(0).getScore(),i++);
 
             if (population.get(0).getScore() >= bestscore){
                 noChangeCtr++;
@@ -97,6 +98,64 @@ public class Main {
                 init[j][col] = a;
 
                 c.setState(init);
+            }
+        }
+    }
+
+    public static void swapColumnMutation(List<Chromosome> selected) {
+        for (Chromosome c : selected) {
+            //int line = new Random().nextInt(30);   //static line
+            int[][] init = c.getState();
+
+            int i = new Random().nextInt(14);
+            int j = new Random().nextInt(14);
+            double mut = new Random().nextDouble();
+
+            if (i != j && mut <= mutationChance) {
+                int[] tmp = new int[30];
+                for (int x=0; x<30; x++){
+                    tmp[x]=init[x][i];
+                    init[x][i] = init[x][j];
+                    init[x][j] = tmp[x];
+                }
+                c.setState(init);
+            }
+        }
+    }
+
+    public static void squareSwapMutation(List<Chromosome> selected){
+        for (Chromosome c : selected) {
+            double mut = new Random().nextDouble();
+            if (mut > mutationChance)
+                continue;
+
+            int rndx = c.getState().length/2;
+            int rndy = c.getState()[0].length/2;
+
+            //int[][] temp = new int[c.getState().length][c.getState()[0].length];
+            int[][] temp=c.getState();
+            boolean coin = new Random().nextBoolean();
+            for (int x = 0; x < c.getState().length; x++) {
+                //System.out.println("X " + x);
+                for (int y=0;y<c.getState()[0].length;y++){
+                    //System.out.println("Y " + y);
+                    if(coin){
+                        if((x < rndx) && (y < rndy)){
+                            temp[x][y]=c.getState()[x+rndx][y+rndy];
+                        }
+                        if ((x >= rndx) && (y >= rndy)){
+                            temp[x][y]=c.getState()[x-rndx][y-rndy];
+                        }
+                    }else{
+                        if((x < rndx) && (y >= rndy)){
+                            temp[x][y]=c.getState()[x+rndx][y-rndy];
+                        }
+                        if ((x >= rndx) && (y < rndy)){
+                            temp[x][y]=c.getState()[x-rndx][y+rndy];
+                        }
+                    }
+                }
+                c.setState(temp);
             }
         }
     }
@@ -178,6 +237,35 @@ public class Main {
             }
         }
     }
+
+
+    public static List<Chromosome> onePointSquareCrossover(List<Chromosome> selected){
+        List<Chromosome> newPopulation = new ArrayList<>();
+
+        for(int i = 1; i < selected.size(); i = i + 2){
+            int rndx = new Random().nextInt(selected.get(i).getState().length);
+            int rndy = new Random().nextInt(selected.get(i).getState()[0].length);
+
+            int[][] temp1 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
+            int[][] temp2 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
+            for (int x = 0; x < selected.get(i).getState().length; x++) {
+                for (int y=0;y<selected.get(i).getState()[0].length;y++){
+                    temp1[x][y] = (((x < rndx) && (y < rndy)) || ((x >= rndx) && (y >= rndy)) ? 1 : 0)*selected.get(i-1).getState()[x][y]
+                            + (((x < rndx) && (y >= rndy)) || ((x >= rndx) && (y < rndy)) ? 1 : 0)*selected.get(i).getState()[x][y];
+
+                    temp2[x][y] = (((x < rndx) && (y < rndy)) || ((x >= rndx) && (y >= rndy)) ? 1 : 0)*selected.get(i).getState()[x][y]
+                            + (((x < rndx) && (y >= rndy)) || ((x >= rndx) && (y < rndy)) ? 1 : 0)*selected.get(i-1).getState()[x][y];
+                }
+            }
+            Chromosome c1 = new Chromosome(temp1, ChromosomeID++);
+            Chromosome c2 = new Chromosome(temp2, ChromosomeID++);
+
+            newPopulation.add(c1);
+            newPopulation.add(c2);
+        }
+        return newPopulation;
+    }
+
 
     public static List<Chromosome> twoPointVertical(List<Chromosome> iPopulation) {
         Chromosome c1,c2;

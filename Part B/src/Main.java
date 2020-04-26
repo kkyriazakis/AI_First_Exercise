@@ -1,19 +1,32 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
 
 public class Main {
 
     private static final int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
     private static int ChromosomeID = 1;
+    private static Writer wr;
+    private static final int PopulationSize = 1000;
     private static final double selectionFactor = 0.6;
-    private static final int PopulationSize = 5000;
-    private static final int maxIterationsWithoutChange = 2000;
-    private static final double mutationChance = 0.5;
+    private static final double mutationChance = 0.7;
+    private static final double crossChance = 0.9;
+    private static final int maxIterationsWithoutChange = 1000;
+    private static final int maxIterations = 10*maxIterationsWithoutChange;
+
 
     public static void main(String[] args) {
         int noChangeCtr = 0;
         int bestscore = Integer.MAX_VALUE;
         List<Chromosome> population = new LinkedList<>();
         List<Chromosome> selected, tmp, new_popul;
+
+        try {
+            wr = new FileWriter("PopSize" + PopulationSize + "-Psel" + selectionFactor + "-Pcross" + crossChance + "-Pmut" + mutationChance + ".txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         /*----- CREATE INITIAL POPULATION -----*/
         while (population.size() < PopulationSize){
@@ -26,7 +39,8 @@ public class Main {
 
         int i = 1;
         /*----- START GENETIC ALGORITHM PROCCESS -----*/
-        while ( noChangeCtr < maxIterationsWithoutChange) {
+        while ( noChangeCtr < maxIterationsWithoutChange && i < maxIterations) {
+            int[] generation_score = new int[PopulationSize];
             selected = rouletteWheelSelection(population); //SELECTION
 
             /* ---- CROSSOVER ---- */
@@ -40,7 +54,6 @@ public class Main {
             //boundaryMutation(tmp);
             //inversionMutation(tmp);
 
-
             //FILL THE BLANKS
             new_popul = new LinkedList<>();
             Chromosome chr;
@@ -50,17 +63,27 @@ public class Main {
                     chr = tmp.get(j);
                     if (checkFeasibility( chr )){ //FEASIBILITY CHECK
                         chr.updateScore();  //CHROMOSOME RATING
+                        generation_score[j] = chr.getScore();
                         new_popul.add(chr);
                     }
                     else
                         tmp.remove(j--);
                 }
-                else
-                    new_popul.add( population.get(j - tmp.size()) );
+                else {
+                    chr = population.get(j - tmp.size());
+                    new_popul.add( chr );
+                    generation_score[j] = chr.getScore();
+                }
             }
-
             sortByScore( new_popul );
             population = new LinkedList<>(new_popul);
+
+            double mean = Arrays.stream(generation_score).average().orElse(Double.NaN);
+            try {
+                wr.write(i + ":" + mean + ":" + population.get(0).getScore() + "\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             /* ---- PRINT DEBUG INFO ---- */
             System.out.printf("%-4d -- FeasibleSize( %-4d ) -- Best cost = %-6d -- Generation[%d]\n", noChangeCtr, tmp.size(), population.get(0).getScore(),i++);
@@ -73,6 +96,14 @@ public class Main {
                 noChangeCtr = 0;
             }
         }
+
+        try {
+            wr.write("\n");
+            wr.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
         Chromosome solution = population.get(0);
 
@@ -243,13 +274,21 @@ public class Main {
         List<Chromosome> newPopulation = new ArrayList<>();
 
         for(int i = 1; i < selected.size(); i = i + 2){
+            double mut = new Random().nextDouble();
+            if(mut > crossChance) {
+                newPopulation.add(selected.get(i));
+                newPopulation.add(selected.get(i - 1));
+                continue;
+            }
+
             int rndx = new Random().nextInt(selected.get(i).getState().length);
             int rndy = new Random().nextInt(selected.get(i).getState()[0].length);
 
             int[][] temp1 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
             int[][] temp2 = new int[selected.get(i).getState().length][selected.get(i).getState()[0].length];
-            for (int x = 0; x < selected.get(i).getState().length; x++) {
-                for (int y=0;y<selected.get(i).getState()[0].length;y++){
+
+            for (int x = 0; x<selected.get(i).getState().length; x++) {
+                for (int y=0; y<selected.get(i).getState()[0].length; y++){
                     temp1[x][y] = (((x < rndx) && (y < rndy)) || ((x >= rndx) && (y >= rndy)) ? 1 : 0)*selected.get(i-1).getState()[x][y]
                             + (((x < rndx) && (y >= rndy)) || ((x >= rndx) && (y < rndy)) ? 1 : 0)*selected.get(i).getState()[x][y];
 
@@ -285,6 +324,12 @@ public class Main {
                 init2 = iPopulation.get(2*i + 1).getState();
             }catch ( ArrayIndexOutOfBoundsException e ) { break; }
 
+            double mut = new Random().nextDouble();
+            if(mut > crossChance) {
+                fPopulation.add(iPopulation.get(2*i));
+                fPopulation.add(iPopulation.get(2*i + 1));
+                continue;
+            }
 
             for (int x=0; x<30; x++){
                 for (int y=0; y<14; y++){
@@ -323,6 +368,13 @@ public class Main {
             int[][] temp2 = new int[iPopulation.get(i).getState().length][iPopulation.get(i).getState()[0].length];
 
             for(int j=0;j<iPopulation.get(i).getState().length;j++){
+                double mut = new Random().nextDouble();
+                if(mut > crossChance) {
+                    newPopulation.add(iPopulation.get(i));
+                    newPopulation.add(iPopulation.get(i-1));
+                    continue;
+                }
+
                 if( j < rnd1){
                     for (int x=0;x<iPopulation.get(i).getState()[0].length;x++){
                         temp1[j][x] = iPopulation.get(i).getState()[j][x];

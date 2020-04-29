@@ -74,7 +74,6 @@ public class Chromosome {
                     this.score += 800;
                 }
 
-
                 switch (worker[d]) {
                     case 0: cLeave++; break;
                     case 1:

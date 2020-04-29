@@ -8,10 +8,14 @@ public class Main {
     private static final int[][]  hConst = {{10,10,5},{10,10,5},{5,10,5},{5,5,5},{5,10,5},{5,5,5},{5,5,5}};
     private static int ChromosomeID = 1;
     private static Writer wr;
-    private static final int PopulationSize = 1000;
-    private static final double selectionFactor = 0.6;
-    private static final double mutationChance = 0.7;
-    private static final double crossChance = 0.9;
+    private static final int populationSize = 1000;
+    private static final int numOfWorkers = 30;
+    private static final int numOfDays = 14;
+
+    private static final double selectionFactor = 0.75;
+    private static final double mutationChance = 0.2;
+    private static final double crossChance = 1;
+
     private static final int maxIterationsWithoutChange = 1000;
     private static final int maxIterations = 10*maxIterationsWithoutChange;
 
@@ -23,42 +27,46 @@ public class Main {
         List<Chromosome> selected, tmp, new_popul;
 
         try {
-            wr = new FileWriter("PopSize" + PopulationSize + "-Psel" + selectionFactor + "-Pcross" + crossChance + "-Pmut" + mutationChance + ".txt");
+            wr = new FileWriter("PopSize" + populationSize + "-Psel" + selectionFactor + "-Pcross" + crossChance + "-Pmut" + mutationChance + ".txt");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+
         /*----- CREATE INITIAL POPULATION -----*/
-        while (population.size() < PopulationSize){
+        while (population.size() < populationSize){
             Chromosome chr = randomizeChromosome( generateBaseChromosome() );
             if (checkFeasibility(chr)){ //FEASIBILITY CHECK
-                chr.updateScore();  //CHROMOSOME RATING
+                chr.updateScore();      //CHROMOSOME RATING
                 population.add(chr);
             }
         }
 
-        int i = 1;
+        int iteration_ctr = 1;
         /*----- START GENETIC ALGORITHM PROCCESS -----*/
-        while ( noChangeCtr < maxIterationsWithoutChange && i < maxIterations) {
-            int[] generation_score = new int[PopulationSize];
-            selected = rouletteWheelSelection(population); //SELECTION
+        while ( noChangeCtr < maxIterationsWithoutChange && iteration_ctr < maxIterations) {
+            int[] generation_score = new int[populationSize];   //Used to calculate score mean
 
-            /* ---- CROSSOVER ---- */
+            /* ================== SELECTION ================== */
+            selected = rouletteWheelSelection(population);
+
+            /* ================== CROSSOVER ================== */
+            tmp = onePointSquareCrossover(selected);
             //tmp = twoPointHorizontal(selected);
             //tmp = twoPointVertical(selected);
-            tmp = onePointSquareCrossover(selected);
 
-            /* ---- MUTATION ---- */
+            /* ==================  MUTATION  ================== */
             swapMutation(tmp);
             //flipMutate(tmp);
             //boundaryMutation(tmp);
             //inversionMutation(tmp);
+            //swapColumnMutation(tmp);
+            //squareSwapMutation(tmp);
 
-            //FILL THE BLANKS
+            /* Feasibility Check, Score Update, fill Population with old chromosomes */
             new_popul = new LinkedList<>();
             Chromosome chr;
-
-            for (int j=0; j<PopulationSize; j++){
+            for (int j = 0; j< populationSize; j++){
                 if ( j < tmp.size() ){
                     chr = tmp.get(j);
                     if (checkFeasibility( chr )){ //FEASIBILITY CHECK
@@ -76,50 +84,44 @@ public class Main {
                 }
             }
             sortByScore( new_popul );
-            population = new LinkedList<>(new_popul);
+            population = new LinkedList<>( new_popul );
 
             double mean = Arrays.stream(generation_score).average().orElse(Double.NaN);
             try {
-                wr.write(i + ":" + mean + ":" + population.get(0).getScore() + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                wr.write(iteration_ctr + ":" + mean + ":" + population.get(0).getScore() + "\n");
+            } catch (IOException e) { e.printStackTrace(); }
 
             /* ---- PRINT DEBUG INFO ---- */
-            System.out.printf("%-4d -- FeasibleSize( %-4d ) -- Best cost = %-6d -- Generation[%d]\n", noChangeCtr, tmp.size(), population.get(0).getScore(),i++);
+            System.out.printf("%-4d -- FeasibleSize( %-4d ) -- Best cost = %-6d -- Generation[%d]\n",noChangeCtr,tmp.size(),population.get(0).getScore(),iteration_ctr++);
 
-            if (population.get(0).getScore() >= bestscore){
-                noChangeCtr++;
-            }
-            else {
+            if (population.get(0).getScore() < bestscore){  //Check and update best score
                 bestscore = population.get(0).getScore();
                 noChangeCtr = 0;
             }
+            else {
+                noChangeCtr++;
+            }
         }
 
-        try {
-            wr.write("\n");
-            wr.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try { wr.close(); }
+        catch (IOException e) { e.printStackTrace(); }
 
-
+        //Get best Chromosome
         Chromosome solution = population.get(0);
 
         System.out.println("\nBest Solution found:");
-        System.out.println("Chromosome ID = " + solution.getId());
+        System.out.println("Chromosome ID   = " + solution.getId());
         System.out.println("Chromosome Cost = " + solution.getScore());
     }
 
     public static void swapMutation(List<Chromosome> population){
         int i,j;
         for (Chromosome c : population) {
-            int col = new Random().nextInt(14); //Random column
+            int col = new Random().nextInt(numOfDays); //Random column
             int[][] init = c.getState();
 
-            i = new Random().nextInt(30);
-            j = new Random().nextInt(30);
+            i = new Random().nextInt(numOfWorkers);
+            j = new Random().nextInt(numOfWorkers);
             double mut = new Random().nextDouble();
 
             if( i!=j && mut <= mutationChance){
@@ -135,16 +137,15 @@ public class Main {
 
     public static void swapColumnMutation(List<Chromosome> selected) {
         for (Chromosome c : selected) {
-            //int line = new Random().nextInt(30);   //static line
             int[][] init = c.getState();
 
-            int i = new Random().nextInt(14);
-            int j = new Random().nextInt(14);
+            int i = new Random().nextInt(numOfDays);
+            int j = new Random().nextInt(numOfDays);
             double mut = new Random().nextDouble();
 
             if (i != j && mut <= mutationChance) {
-                int[] tmp = new int[30];
-                for (int x=0; x<30; x++){
+                int[] tmp = new int[numOfWorkers];
+                for (int x=0; x<numOfWorkers; x++){
                     tmp[x]=init[x][i];
                     init[x][i] = init[x][j];
                     init[x][j] = tmp[x];
@@ -160,34 +161,32 @@ public class Main {
             if (mut > mutationChance)
                 continue;
 
-            int rndx = c.getState().length/2;
-            int rndy = c.getState()[0].length/2;
+            int rndx = numOfWorkers/2;
+            int rndy = numOfDays/2;
 
-            //int[][] temp = new int[c.getState().length][c.getState()[0].length];
-            int[][] temp=c.getState();
+            int[][] temp = c.getState();
             boolean coin = new Random().nextBoolean();
-            for (int x = 0; x < c.getState().length; x++) {
-                //System.out.println("X " + x);
-                for (int y=0;y<c.getState()[0].length;y++){
-                    //System.out.println("Y " + y);
+            for (int i=0; i<numOfWorkers; i++) {
+                for (int j=0; j<numOfDays; j++){
                     if(coin){
-                        if((x < rndx) && (y < rndy)){
-                            temp[x][y]=c.getState()[x+rndx][y+rndy];
+                        if ((i < rndx) && (j < rndy)){
+                            temp[i][j] = c.getState()[i+rndx][j+rndy];
                         }
-                        if ((x >= rndx) && (y >= rndy)){
-                            temp[x][y]=c.getState()[x-rndx][y-rndy];
+                        if ((i >= rndx) && (j >= rndy)){
+                            temp[i][j] = c.getState()[i-rndx][j-rndy];
                         }
-                    }else{
-                        if((x < rndx) && (y >= rndy)){
-                            temp[x][y]=c.getState()[x+rndx][y-rndy];
+                    }
+                    else{
+                        if ((i < rndx) && (j >= rndy)){
+                            temp[i][j] = c.getState()[i+rndx][j-rndy];
                         }
-                        if ((x >= rndx) && (y < rndy)){
-                            temp[x][y]=c.getState()[x-rndx][y+rndy];
+                        if ((i >= rndx) && (j < rndy)){
+                            temp[i][j] = c.getState()[i-rndx][j+rndy];
                         }
                     }
                 }
-                c.setState(temp);
             }
+            c.setState(temp);
         }
     }
 
@@ -197,21 +196,21 @@ public class Main {
             if(mut > mutationChance)
                 continue;
 
-            int x = new Random().nextInt(c.getState()[0].length); //column
-            int i = new Random().nextInt(c.getState().length);
-            int j = new Random().nextInt(c.getState().length);
+            int x = new Random().nextInt(numOfDays); //column
+            int i = new Random().nextInt(numOfWorkers);
+            int j = new Random().nextInt(numOfWorkers);
             int[][] tmp = c.getState().clone();
 
             if (i < j) {
                 int b = j;
-                for (int y = i; y < j; y++) {
+                for (int y=i ; y<j; y++) {
                     tmp[b][x] = c.getState()[y][x];
                     b--;
                 }
             }
             else {
                 int b = i;
-                for (int y = j; y < i; y++) {
+                for (int y=j; y<i; y++) {
                     tmp[b][x] = c.getState()[y][x];
                     b--;
                 }
@@ -223,7 +222,7 @@ public class Main {
 
     public static void flipMutate(List<Chromosome> population) {
         int point1, point2;
-        int [][] state = new int[0][0];
+        int [][] state = new int[numOfWorkers][numOfDays];
 
         for (Chromosome chr : population) {
             double mut = new Random().nextDouble();
@@ -231,8 +230,8 @@ public class Main {
                 continue;
 
             for (int j = 0; j < 3; j++) {   //THREE RANDOM LOCATIONS
-                point1 = new Random().nextInt(30);
-                point2 = new Random().nextInt(14);
+                point1 = new Random().nextInt(numOfWorkers);
+                point2 = new Random().nextInt(numOfDays);
                 state = chr.getState();
 
                 if (state[point1][point2] == 0)
@@ -255,8 +254,8 @@ public class Main {
                 continue;
 
             for (int j = 0; j < 2; j++) { //Maybe get the upper bound of 1% online
-                int x = new Random().nextInt(chr.getState().length);
-                int y = new Random().nextInt(chr.getState()[0].length);
+                int x = new Random().nextInt(numOfWorkers);
+                int y = new Random().nextInt(numOfDays);
                 boolean coin = new Random().nextBoolean();
                 int[][] tmp = chr.getState();
                 if (coin) {
@@ -312,12 +311,12 @@ public class Main {
         int point1, point2;
         int [][] init1, init2, fin1, fin2;
 
-        fin1 = new int[30][14];
-        fin2 = new int[30][14];
+        fin1 = new int[numOfWorkers][numOfDays];
+        fin2 = new int[numOfWorkers][numOfDays];
 
         for (int i=0; i<iPopulation.size()/2; i++ ){
-            point1 = new Random().nextInt(7);
-            point2 = new Random().nextInt(7) + 7;
+            point1 = new Random().nextInt(numOfDays);
+            point2 = new Random().nextInt(numOfDays) + numOfDays;
 
             init1 = iPopulation.get(2*i).getState();
             try {
@@ -331,8 +330,8 @@ public class Main {
                 continue;
             }
 
-            for (int x=0; x<30; x++){
-                for (int y=0; y<14; y++){
+            for (int x=0; x<numOfWorkers; x++){
+                for (int y=0; y<numOfDays; y++){
                     if ( y <= point1 ){
                         fin1[x][y] = init1[x][y];
                         fin2[x][y] = init2[x][y];
@@ -361,13 +360,13 @@ public class Main {
         List<Chromosome> newPopulation = new ArrayList<>();
 
         for (int i=1; i<iPopulation.size(); i+=2){
-            int rnd1 = new Random().nextInt(iPopulation.get(i).getState().length/2);
-            int rnd2 = new Random().nextInt(iPopulation.get(i).getState().length/2) + iPopulation.get(i).getState().length/2;
+            int rnd1 = new Random().nextInt(numOfWorkers/2);
+            int rnd2 = new Random().nextInt(numOfWorkers/2) + numOfWorkers/2;
 
-            int[][] temp1 = new int[iPopulation.get(i).getState().length][iPopulation.get(i).getState()[0].length];
-            int[][] temp2 = new int[iPopulation.get(i).getState().length][iPopulation.get(i).getState()[0].length];
+            int[][] temp1 = new int[numOfWorkers][numOfDays];
+            int[][] temp2 = new int[numOfWorkers][numOfDays];
 
-            for(int j=0;j<iPopulation.get(i).getState().length;j++){
+            for(int j=0; j<numOfWorkers; j++){
                 double mut = new Random().nextDouble();
                 if(mut > crossChance) {
                     newPopulation.add(iPopulation.get(i));
@@ -375,22 +374,18 @@ public class Main {
                     continue;
                 }
 
-                if( j < rnd1){
-                    for (int x=0;x<iPopulation.get(i).getState()[0].length;x++){
+                for (int x=0; x<numOfDays; x++) {
+                    if (j < rnd1) {
                         temp1[j][x] = iPopulation.get(i).getState()[j][x];
-                        temp2[j][x] = iPopulation.get(i-1).getState()[j][x];
+                        temp2[j][x] = iPopulation.get(i - 1).getState()[j][x];
                     }
-                }
-                if( j >= rnd1 && j < rnd2){
-                    for (int x=0;x<iPopulation.get(i).getState()[0].length;x++){
-                        temp1[j][x] = iPopulation.get(i-1).getState()[j][x];
+                    else if (j >= rnd1 && j < rnd2) {
+                        temp1[j][x] = iPopulation.get(i - 1).getState()[j][x];
                         temp2[j][x] = iPopulation.get(i).getState()[j][x];
                     }
-                }
-                if( j>= rnd2){
-                    for (int x=0;x<iPopulation.get(i).getState()[0].length;x++){
+                    else if (j >= rnd2) {
                         temp1[j][x] = iPopulation.get(i).getState()[j][x];
-                        temp2[j][x] = iPopulation.get(i-1).getState()[j][x];
+                        temp2[j][x] = iPopulation.get(i - 1).getState()[j][x];
                     }
                 }
             }
@@ -444,11 +439,11 @@ public class Main {
         int [][] pop = chr.getState();
         int [] col;
 
-        for(int i=0; i<14; i++){
+        for(int i=0; i<numOfDays; i++){
             col = getColumn(pop, i);    //EXTRACT COLUMN NUM i 
 
             List<Integer> tmp = new ArrayList<>();
-            for (int w=0; w<30; w++){
+            for (int w=0; w<numOfWorkers; w++){
                 tmp.add(col[w]);
             }
             Collections.shuffle(tmp, new Random());
@@ -458,7 +453,6 @@ public class Main {
                 pop[j][i] = col[j];
             }
         }
-
         Chromosome new_chr = new Chromosome(pop, ChromosomeID);
         ChromosomeID++;
         return new_chr;
@@ -467,15 +461,14 @@ public class Main {
 
     public static boolean checkFeasibility(Chromosome chromosome){
         int[][] array = chromosome.getState();
-        //int[][] array = testArray;
         int morningW1, morningW2;
         int afternoonW1, afternoonW2;
         int nightW1, nightW2;
 
-        for(int j=0; j<7; j++){     //CHECKING HARD CONSTRAINTS
+        for(int j=0; j<numOfDays; j++){     //CHECKING HARD CONSTRAINTS
             morningW1=0; afternoonW1=0; nightW1=0;
             morningW2=0; afternoonW2=0; nightW2=0;
-            for (int i=0; i<30; i++){
+            for (int i=0; i<numOfWorkers; i++){
                 switch (array[i][j]){       //CHECKING FIRST WEEK
                     case 0: break;
                     case 1: morningW1++; break;
@@ -506,12 +499,10 @@ public class Main {
 
 
     public static Chromosome generateBaseChromosome(){
-        int[][] pop = new int[30][14];
-        int NumOfDays = hConst.length;
-        int NumOfEmployees = 30;
+        int[][] pop = new int[numOfWorkers][numOfDays];
 
-        for (int d=0; d<NumOfDays; d++){    //FOR EACH DAY
-            for (int e=0; e<NumOfEmployees; e++){   //FOR EACH EMPLOYEE
+        for (int d=0; d<numOfDays; d++){    //FOR EACH DAY
+            for (int e=0; e<numOfWorkers; e++){   //FOR EACH EMPLOYEE
                 if( e >= hConst[d][0] + hConst[d][1] + hConst[d][2]){   //SET DAY OFF
                     pop[e][d] = 0;
                     pop[e][d+7] = 0;

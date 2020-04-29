@@ -465,7 +465,7 @@ public class Main {
         int afternoonW1, afternoonW2;
         int nightW1, nightW2;
 
-        for(int j=0; j<numOfDays; j++){     //CHECKING HARD CONSTRAINTS
+        for(int j=0; j<numOfDays/2; j++){     //CHECKING HARD CONSTRAINTS
             morningW1=0; afternoonW1=0; nightW1=0;
             morningW2=0; afternoonW2=0; nightW2=0;
             for (int i=0; i<numOfWorkers; i++){
@@ -501,7 +501,7 @@ public class Main {
     public static Chromosome generateBaseChromosome(){
         int[][] pop = new int[numOfWorkers][numOfDays];
 
-        for (int d=0; d<numOfDays; d++){    //FOR EACH DAY
+        for (int d=0; d<numOfDays/2; d++){    //FOR EACH DAY
             for (int e=0; e<numOfWorkers; e++){   //FOR EACH EMPLOYEE
                 if( e >= hConst[d][0] + hConst[d][1] + hConst[d][2]){   //SET DAY OFF
                     pop[e][d] = 0;
